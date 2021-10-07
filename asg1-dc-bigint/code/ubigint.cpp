@@ -29,16 +29,84 @@ ubigint::ubigint (const string& that): ubig_value(0) {
          n++;
       }
       
+      for (int i = len(that); i > 0; i--) {
+         ubig_value.push_back(that[i])
+      }
+      // str = "2 5 6"
+      // v[] = [2]
+      // v[] = [2][5]
+      // v[] = [2][5][6]
    }
 }
 
 ubigint ubigint::operator+ (const ubigint& that) const {
    DEBUGF ('u', *this << "+" << that);
-   ubigint result (uvalue + that.uvalue);
+   ubigint result (ubig_value + that.ubig_value);
    DEBUGF ('u', result);
 
-   //new code
-   vector<int> leftInput;
+   // new code
+   // vector<int> leftInput;
+
+   // [2 5 6 8 1 9]
+   //     [5 2 9 0]
+   //   [0 5 2 9 0]
+   // [0 0 5 2 9 0]
+
+   // [2 6 2 1 0 9]
+
+   // Checks for larger operand and set flag
+   bool sizeFlag;
+   if (ubig_value.size() > that.ubig_value.size()) {
+      sizeFlag = true;
+   } else {
+      sizeFlag = false;
+   }
+
+   // If flag is not set add one way, else add another way
+   ubigint sum;
+   uint8_t temp = 0, carryFlag = 0;  // max size 1024
+   if (sizeFlag) {
+      // FLAG is TRUE: ubig_value is greater than that.ubig_value
+      int i;
+      for (i = 0; i < that.ubig_value.size(); i--) {
+         if (carryFlag == 1) {
+            temp += carryFlag;
+         }
+         temp = ubig_value[ubig_value.size() - i] + that.ubig_value[that.ubig_value.size() - i];
+         if (temp > 9) {
+            carryFlag = 1;
+            temp -= 10;
+         }
+         result.push_back(temp);
+      }
+      // append zeroes after main loop
+      while (i < ubig_value.size()) {
+         // REMEMBER FINAL CARRY
+         result.insert(0, ubig_value[ubig_value.size() - i]);
+         i++;
+      }
+   } else {
+      // FLAG is FALSE: that.ubig_value is greater than ubig_value
+      int i;
+      for (i = 0; i < ubig_value.size(); i--) {
+         if (carryFlag == 1) {
+            temp += carryFlag;
+         }
+         temp = that.ubig_value[ubig_value.size() - i] + ubig_value[that.ubig_value.size() - i];
+         if (temp > 9) {
+            carryFlag = 1;
+            temp -= 10;
+         }
+         result.push_back(temp);
+      }
+      // append zeroes after main loop
+      while (i < that.ubig_value.size()) {
+                  // REMEMBER FINAL CARRY
+         result.insert(0, that.ubig_value[ubig_value.size() - i]);
+         i++;
+      }
+   }
+
    return result;
 }
 
@@ -95,14 +163,14 @@ ubigint ubigint::operator% (const ubigint& that) const {
 }
 
 bool ubigint::operator== (const ubigint& that) const {
-   return uvalue == that.uvalue;
+   return ubig_value == that.ubig_value;
 }
 
 bool ubigint::operator< (const ubigint& that) const {
-   return uvalue < that.uvalue;
+   return ubig_value < that.ubig_value;
 }
 
 ostream& operator<< (ostream& out, const ubigint& that) { 
-   return out << "ubigint(" << that.uvalue << ")";
+   return out << "ubigint(" << that.ubig_value << ")";
 }
 
