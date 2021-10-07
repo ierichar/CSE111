@@ -15,13 +15,20 @@ ubigint::ubigint (unsigned long that): uvalue (that) {
    DEBUGF ('~', this << " -> " << uvalue)
 }
 
-ubigint::ubigint (const string& that): uvalue(0) {
+ubigint::ubigint (const string& that): ubig_value(0) {
    DEBUGF ('~', "that = \"" << that << "\"");
    for (char digit: that) {
       if (not isdigit (digit)) {
          throw invalid_argument ("ubigint::ubigint(" + that + ")");
       }
-      uvalue = uvalue * 10 + digit - '0';
+      //uvalue = uvalue * 10 + digit - '0';
+      int l = that.length();
+      int n = 0;
+      for(int (l-1)!=n){
+         ubig_value.push_back(that.n);
+         n++;
+      }
+      
    }
 }
 
