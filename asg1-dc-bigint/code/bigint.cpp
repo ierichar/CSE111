@@ -23,10 +23,51 @@ bigint::bigint (const string& that) {
 }
 
 bigint bigint::operator+ () const {
+   //is A string larger than B string?
+      //yes!
+         //are the signs the same?
+            //yes!
+               //are they positive?
+                  //yes!
+                     //Run addition (A+B)
+                  //no!
+                     //Run addition flip sign(-A+-B)
    return *this;
 }
 
 bigint bigint::operator- () const {
+   // WORK IN PROGRESS
+   //first step, check size of A and B
+
+   //is A larger than B?
+      //it's gonna  stay the sign of the larger #
+   //is B larger than A?
+      //it's gonna stay the sign of the larger #
+   //else, They are the same size
+
+   //Are they the same sign?
+      //yes?
+         //is the larger string first?
+            //yes?
+               //stays that sign
+            //no?
+               //flip signs
+      //no? 
+         //is the larger string first?
+            //yes?
+               //stays that sign
+            //no?
+               //flip sign
+
+
+
+   //subbing two pos #'s that leads to a positive
+
+   // subbing two pos #'s that lead to a negative
+
+   //subbing two neg #'s that lead to a positive
+
+   //subbing two neg #'s that lead to a negative
    return {uvalue, not is_negative};
 }
 
