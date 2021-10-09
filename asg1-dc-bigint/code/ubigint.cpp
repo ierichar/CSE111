@@ -39,6 +39,19 @@ ubigint::ubigint (const string& that): ubig_value(0) {
    }
 }
 
+// Notes on bigint to ubigint
+// operand A, B: assume A >= B
+// bigint ---  ubigint ---
+// A + B 		(+) call +
+// A + -B 		call - 
+// -A + B 		(-) call to ubigint A - B
+// -A + -B 	   (-) call to ubigint A + B
+
+// A - B 		call - 
+// A - -B 		call to ubigint A + B
+// -A - B 		(-) A + B
+// -A - -B 	   (-) A - B
+
 ubigint ubigint::operator+ (const ubigint& that) const {
    DEBUGF ('u', *this << "+" << that);
    ubigint result (ubig_value + that.ubig_value);
@@ -47,12 +60,12 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    // new code
    // vector<int> leftInput;
 
-   // [2 5 6 8 1 9]
-   //     [5 2 9 0]
-   //   [0 5 2 9 0]
-   // [0 0 5 2 9 0]
+   //  [9 9 6 8 1 9]
+   //      [5 2 9 0]
+   //    [0 5 2 9 0]
+   //  [0 0 5 2 9 0]
 
-   // [2 6 2 1 0 9]
+   //[1 0 6 2 1 0 9]
 
    // Checks for larger operand and set flag
    bool sizeFlag;
@@ -66,56 +79,129 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    ubigint sum;
    uint8_t temp = 0, carryFlag = 0;  // max size 1024
    if (sizeFlag) {
+
       // FLAG is TRUE: ubig_value is greater than that.ubig_value
       int i;
-      for (i = 0; i < that.ubig_value.size(); i--) {
-         if (carryFlag == 1) {
+      for (i = 0; i < that.ubig_value.size(); i++) {
+         if (carryFlag) {
             temp += carryFlag;
+            carryFlag = 0;
          }
          temp = ubig_value[ubig_value.size() - i] + that.ubig_value[that.ubig_value.size() - i];
          if (temp > 9) {
-            carryFlag = 1;
             temp -= 10;
+            carryFlag = 1;
          }
          result.push_back(temp);
       }
       // append zeroes after main loop
       while (i < ubig_value.size()) {
+         if (carryFlag) {
+            temp += carryFlag;
+            carryFlag = 0;
+         }
+         temp = ubig_value[ubig_value.size() - i]
+         if (temp > 9) {
+            temp -= 10;
+            carryFlag = 1;
+         }
          // REMEMBER FINAL CARRY
-         result.insert(0, ubig_value[ubig_value.size() - i]);
+         result.insert(0, temp);
          i++;
       }
+
    } else {
+
       // FLAG is FALSE: that.ubig_value is greater than ubig_value
       int i;
-      for (i = 0; i < ubig_value.size(); i--) {
-         if (carryFlag == 1) {
+      for (i = 0; i < ubig_value.size(); i++) {
+         if (carryFlag) {
             temp += carryFlag;
+            carryFlag = 0;
          }
          temp = that.ubig_value[ubig_value.size() - i] + ubig_value[that.ubig_value.size() - i];
          if (temp > 9) {
-            carryFlag = 1;
             temp -= 10;
+            carryFlag = 1;
          }
          result.push_back(temp);
       }
-      // append zeroes after main loop
+      // append zeroes and potential carry after main loop
       while (i < that.ubig_value.size()) {
-                  // REMEMBER FINAL CARRY
-         result.insert(0, that.ubig_value[ubig_value.size() - i]);
+         if (carryFlag) {
+            temp += carryFlag;
+            carryFlag = 0;
+         }
+         temp = that.ubig_value[ubig_value.size() - i];
+         if (temp > 9) {
+            temp -= 10;
+            carryFlag = 1;
+         }
+         result.insert(0, temp);
          i++;
       }
+
+   }
+   // if carry remains after previous calculations, add remaining carry
+   if (carryFlag) {
+      result.insert(0, carryFlag);
+      carryFlag = 0;
    }
 
    return result;
 }
 
 ubigint ubigint::operator- (const ubigint& that) const {
+   // a is predetermined to be less than b, otherwise throw error
    if (*this < that) throw domain_error ("ubigint::operator-(a<b)");
-   return ubigint (uvalue - that.uvalue);
+
+   // bigint is given:
+   // OG: -24500 + 110
+   //   : -230032 - 123123 (pass to operator+)
+   // result is negative so..
+   // pass +24500 - 110
+   // operator-
+   // bigint passing: a >= b
+   // a - b
+   // 24500 - 110
+   // result is passed back to bigint
+   // bigint knew was negative
+   // OG: a negative result 
+
+   // [1 0 0 0 0 0]
+   //-[0 0 0 0 9 9]
+
+   ubigint difference;
+   uint8_t temp, carryFlag;
+   // assume that.ubig_value is > or == this.ubig_value
+   for (int i = 0; i < ubig_value; i++) {
+      if (ubig_value[ubig_value.size() - i] < 
+            that.ubig_value[ubig_value.size() - i]) {
+         carryFlag += 1;
+         temp = ubig_value[ubig_value.size() - i] + 10;
+         temp -= that.ubig_value[ubig_value.size() - i];
+      } else {
+         temp = ubig_value[ubig_value.size() - i] - 
+                that.ubig_value[ubig_value.size() - i];
+      }
+      result.push_back(temp);
+   }
+
+   return ubigint (ubig_value - that.ubig_value);
 }
 
 ubigint ubigint::operator* (const ubigint& that) const {
+   // vector will never be more than twice the combined # of elements
+   // double for loop
+   // [1 2 5 4]
+   // x   [1 5]
+   // temp = [5] x [1254] x 10^0 (append a zero to the back) (1)
+   // temp = [1] x [1254] x 10^1 
+   // product += temp (calling ubigint operater+)
+
+   // (1)
+   // 4 x 5 = 20 (while temp > 9) carry++ temp-=10
+   // 2 + 5 x 5 = 27 (while temp > 9) carry++ temp-=10
    return ubigint (uvalue * that.uvalue);
 }
 
