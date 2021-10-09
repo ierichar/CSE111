@@ -31,11 +31,63 @@ bigint bigint::operator- () const {
 }
 
 bigint bigint::operator+ (const bigint& that) const {
+//check for negatives in each one, subtract 1 respectively
+
+
+   //are strings same size?
+      //create a flag, isBLarger? yes, run first loop! no? run second loop.
+
+   //is B string larger than A string?
+      //same code as below but flip B and A when calling value!
+
+   //is A string larger than B string?
+      //yes!
+         //are the signs the same?
+            //yes!
+               //are they positive?
+                  //yes!
+                     //Run addition (A+B) (A+B, keep +)
+                  //no!
+                     //Run addition flip sign(-A+-B) (A+B, keep -)
+            //no!
+               //is A negative?
+                  //yes!
+                     //run subtraction (-a+b) A is larger, A-B, keep -
+                  //no!
+                     //run subtraction (a+-b)  A is larger, A-B
+            
+               
+      //no!
+
    ubigint result {uvalue + that.uvalue};
    return result;
 }
 
 bigint bigint::operator- (const bigint& that) const {
+   //are strings same size?
+      //create a flag, isBLarger? yes, run first loop! no? run second loop.
+
+   //is B string larger than A string?
+      //same code as below but flip B and A when calling value!
+
+//is A string larger than B string?
+   //Yes!
+      //are the signs the same?
+         //yes!
+            //are they positive?
+               //yes!
+                  //run subtraction (a-b)
+               //no
+                  //rub subtraction(-a--b) = (-(a-b))
+         //no!
+            //is A negative?
+               //yes!
+                  //run addition (-a-b) (-16-13 = 29)
+               //no!
+                  //run addition (a--b) (32--16 = 48)
+
+
+
    ubigint result {uvalue - that.uvalue};
    return result;
 }
