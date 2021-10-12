@@ -11,8 +11,8 @@ using namespace std;
 #include "relops.h"
 #include "ubigint.h"
 
-ubigint::ubigint (unsigned long that): uvalue (that) {
-   DEBUGF ('~', this << " -> " << uvalue)
+ubigint::ubigint (unsigned long that): ubig_value (that) {
+   DEBUGF ('~', this << " -> " << ubig_value)
 }
 
 ubigint::ubigint (const string& that): ubig_value(0) {
@@ -22,15 +22,9 @@ ubigint::ubigint (const string& that): ubig_value(0) {
          throw invalid_argument ("ubigint::ubigint(" + that + ")");
       }
       //uvalue = uvalue * 10 + digit - '0';
-      int l = that.length();
-      int n = 0;
-      for(int (l-1)!=n){
-         ubig_value.push_back(that.n);
-         n++;
-      }
-      
-      for (int i = len(that); i > 0; i--) {
-         ubig_value.push_back(that[i])
+
+      for (int i = that.length(); i > 0; i--) {
+         ubig_value.push_back(that[i]);
       }
       // str = "2 5 6"
       // v[] = [2]
@@ -53,10 +47,10 @@ ubigint::ubigint (const string& that): ubig_value(0) {
 // -A - -B 	   (-) A - B
 
 ubigint ubigint::operator+ (const ubigint& that) const {
-   DEBUGF ('u', *this << "+" << that);
-   ubigint result (ubig_value + that.ubig_value);
-   DEBUGF ('u', result);
-
+   //DEBUGF ('u', *this << "+" << that);
+   //ubigint result (ubig_value + that.ubig_value);
+   //DEBUGF ('u', result);
+   ubigint result;
    // new code
    // vector<int> leftInput;
 
@@ -100,7 +94,7 @@ ubigint ubigint::operator+ (const ubigint& that) const {
             temp += carryFlag;
             carryFlag = 0;
          }
-         temp = ubig_value[ubig_value.size() - i]
+         temp = ubig_value[ubig_value.size() - i];
          if (temp > 9) {
             temp -= 10;
             carryFlag = 1;
@@ -202,15 +196,15 @@ ubigint ubigint::operator* (const ubigint& that) const {
    // (1)
    // 4 x 5 = 20 (while temp > 9) carry++ temp-=10
    // 2 + 5 x 5 = 27 (while temp > 9) carry++ temp-=10
-   return ubigint (uvalue * that.uvalue);
+   return ubigint (ubig_value * that.ubig_value);
 }
 
 void ubigint::multiply_by_2() {
-   uvalue *= 2;
+   ubig_value *= 2;
 }
 
 void ubigint::divide_by_2() {
-   uvalue /= 2;
+   ubig_value /= 2;
 }
 
 
