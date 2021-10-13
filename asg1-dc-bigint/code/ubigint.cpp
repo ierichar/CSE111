@@ -12,20 +12,28 @@ using namespace std;
 #include "relops.h"
 #include "ubigint.h"
 
+#define BASE static_cast<uint8_t>(10)
+#define ZERO static_cast<uint8_t>(0)
+
 ubigint::ubigint (unsigned long that): ubig_value (that) {
-   DEBUGF ('~', this << " -> " << ubig_value)
+   // DEBUGF ('~', this << " -> " << ubig_value)
+   unsigned long result = that;
+   while (result > 0) {
+      result %= 10;
+      ubig_value.push_back(static_cast<uint8_t>(result));
+   }
 }
 
 ubigint::ubigint (const string& that): ubig_value(0) {
-   DEBUGF ('~', "that = \"" << that << "\"");
+   // DEBUGF ('~', "that = \"" << that << "\"");
    for (char digit: that) {
       if (not isdigit (digit)) {
          throw invalid_argument ("ubigint::ubigint(" + that + ")");
       }
       //uvalue = uvalue * 10 + digit - '0';
       
-      for (int i = 0; i < that.length(); i++) {
-         ubig_value.push_back(that[i])
+      for (uint8_t i = 0; i < that.length(); i++) {
+         ubig_value.push_back(that[i]);
       }
       // str = "2 5 6"
       // v[] = [2]
@@ -69,52 +77,44 @@ ubigint ubigint::operator+ (const ubigint& that) const {
       sizeFlag = false;
    }
 
+   ubigvalue_t larger_vector, smaller_vector;
    // Append zeroes to smaller ubig_value and maintain original size
    uint8_t originalSize;
    if (sizeFlag) {
-
-      for (int i = that.ubig_value.size(); i < ubig_value.size(); i++) {
+      for (uint8_t i = that.ubig_value.size(); i < ubig_value.size(); i++) {
          originalSize = that.ubig_value.size();
-         that.ubig_value.push_back(static_cast<uint8_t>(0));
-
+         larger_vector = this->ubig_value;
+         smaller_vector = that.ubig_value;
+         smaller_vector.push_back(ZERO);
       }
    } else {
-      for (int i = ubig_value.size(); i < that.ubig_value.size(); i++) {
+      for (uint8_t i = ubig_value.size(); i < that.ubig_value.size(); i++) {
          originalSize = ubig_value.size();
-         ubig_value.push_back(static_cast<uint8_t>(0));
+         larger_vector = that.ubig_value;
+         smaller_vector = this->ubig_value;
+         smaller_vector.push_back(ZERO);
       }
    }
 
    // Add indecies in array
-   ubigint sum = (ubig_value.size() + 1, 0);
+   ubigint sum; // = (ubig_value.size() + 1, 0);
    uint8_t temp = 0, carryFlag = 0;
-   for (int i = 0; i < ubig_value.size(); i++) {
+   for (uint8_t i = 0; i < ubig_value.size(); i++) {
       // Premptively check carry
       if (carryFlag) {
          temp += carryFlag;
          carryFlag = 0;
       }
-      temp += ubig_value[i] + that.ubig_value[i];
+      temp += larger_vector[i] + smaller_vector[i];
       // Reduce temp in case it's not 0-9
       if (temp >= BASE) {
          temp -= BASE;
          carryFlag += 1;
       }
-      sum.push_back(temp)
+      sum.ubig_value.push_back(temp);
    }
    if (carryFlag > 0) {
-      sum.push_back(carryFlag);
-   }
-
-   // Remove appended zeroes to appropriate operand
-   if (sizeFlag) {
-      for (int i = originalSize; i < ubig_value.size(); i--) {
-         that.ubig_value.pop_back();
-      }
-   } else {
-      for (int i = originalSize; i < that.ubig_value.size(); i--) {
-         ubig_value.pop_back();
-      }
+      sum.ubig_value.push_back(carryFlag);
    }
 
    return sum;
@@ -140,10 +140,10 @@ ubigint ubigint::operator- (const ubigint& that) const {
    // [1 0 0 0 0 0]
    //-[0 0 0 0 9 9]
 
-   ubigint difference = (ubig_value.size(), 0);
+   ubigint difference; // = (ubig_value.size(), 0);
    uint8_t temp = 0, carryFlag;
    // assume that.ubig_value is > or == this.ubig_value
-   for (int i = 0; i < ubig_value.size(); i++) {
+   for (uint8_t i = 0; i < ubig_value.size(); i++) {
       if (ubig_value[i] < that.ubig_value[i]) {
          carryFlag += 1;
          temp = ubig_value[i] + BASE;
@@ -151,19 +151,20 @@ ubigint ubigint::operator- (const ubigint& that) const {
       } else {
          temp += ubig_value[i] - that.ubig_value[i];
       }
-      difference.push_back(temp);
+      difference.ubig_value.push_back(temp);
    }
    // deal with carry and subtracting carry from subsequent values
+   uint8_t i;
    while (i < ubig_value.size()) {
       if (carryFlag > 0) {
          if (ubig_value[i] == 0) {
-            difference.push_back(static_cast<uint8_t>(9));
+            difference.ubig_value.push_back(static_cast<uint8_t>(9));
          } else {
-            difference.push_back(ubig_value[i] - carryFlag);
+            difference.ubig_value.push_back(ubig_value[i] - carryFlag);
             carryFlag = 0;
          }
       } else {
-         difference.insert(0, ubig_value[i]);
+         difference.ubig_value.insert(difference.ubig_value.begin(), ubig_value[i]);
       }
       i++;
    }
@@ -184,15 +185,28 @@ ubigint ubigint::operator* (const ubigint& that) const {
    // (1)
    // 4 x 5 = 20 (while temp > 9) carry++ temp-=10
    // 2 + 5 x 5 = 27 (while temp > 9) carry++ temp-=10
-   ubigint product = (ubig_value.size() + that.ubig_value.size(), 0), temp_vector;
-   product.push_back(0);      // initialize product to add temp_vector to it
+
+   ubigint product; // = (ubig_value.size() + that.ubig_value.size(), 0);
+   ubigint temp_vector;
+   if (ubig_value.size() > that.ubig_value.size()) {
+      for (uint8_t i = 0; i < ubig_value.size(); i++) {
+         product.ubig_value.push_back(0);      // initialize product to add temp_vector to it
+         temp_vector.ubig_value.push_back(0);  // initialize temp_vector as well
+      }
+   } else {
+      for (uint8_t i = 0; i < that.ubig_value.size(); i++) {
+         product.ubig_value.push_back(0);      // initialize product to add temp_vector to it
+         temp_vector.ubig_value.push_back(0);  // initialize temp_vector as well
+      }
+   }
+
    uint8_t operand1, operand2, temp, carryValue = 0;
-   int i, j, k, power_count = 0;
+   uint8_t i, j, power_count = 0;
    for (i = 0; i < that.ubig_value.size(); i++) {
       // set temp to the entirety of that.ubig_value
       // to multiple into each index of ubig_value
       operand1 = that.ubig_value[i];
-      for (j = 0; j < ubig_value.size(); j++) {
+      for (j = 0; j < this->ubig_value.size(); j++) {
          // maintain carry from previous temp*ubig_value[j] product
          // multiply an index of ubig_value to temp_vector
          operand2 = ubig_value[j];
@@ -207,24 +221,17 @@ ubigint ubigint::operator* (const ubigint& that) const {
             carryValue += 1;
             temp -= BASE;
          }
-         temp_vector.push_back(temp);
+         temp_vector.ubig_value.push_back(temp);
          temp = 0;
       }
-      for (k = 0; k < power_count; k++) {
-         // apply 10 ^ power_count
-         temp_vector.insert(0, static_cast<uint8_t>(0));
-      }
+      temp_vector.ubig_value.insert(temp_vector.ubig_value.begin(), static_cast<uint8_t>(0), power_count);
       // requires operator+ to be functional
-      product = product + temp_vector;
+      product = (product + temp_vector);
       power_count++;
    }
    // if a carry value remains outside of all loops, insert at 0 to prodcut
    if (carryValue > 0) {
-      product.push_back(carryValue);
-   }
-   // pop off remaining zeroes
-   while (ubig_value[ubig_value.size() - 1] == static_cast<uint8_t>(0)) {
-      ubig_value.pop_back();
+      product.ubig_value.push_back(carryValue);
    }
    return product;
    // return ubigint (uvalue * that.uvalue);
@@ -236,7 +243,7 @@ void ubigint::multiply_by_2() {
    // if the carry is 1, use push_back.
    // uvalue *= 2;
    uint8_t temp, carryFlag = 0;
-   for (int i = ubig_value.size() - 1; i >= 0; i--) {
+   for (uint8_t i = ubig_value.size() - 1; i >= 0; i--) {
       if (carryFlag != 0) {
          temp += carryFlag;
          carryFlag = 0;
@@ -250,9 +257,9 @@ void ubigint::multiply_by_2() {
       temp = 0;
    }
    if (carryFlag != 0) {
-      ubig_value.insert(0, carryFlag);
+      ubig_value.insert(ubig_value.begin(), carryFlag, 1);
    }
-   return
+   return;
 }
 
 void ubigint::divide_by_2() {
@@ -261,8 +268,8 @@ void ubigint::divide_by_2() {
    // current digit. Be careful of the end, and pop_back any remaining high 
    // order zeros
    // ubig_value /= 2;
-   uint8_t temp = 0, carryFlag = 0;
-   for (int i = 0; i < ubig_value.size(); i++) {
+   uint8_t temp = 0;
+   for (uint8_t i = 0; i < ubig_value.size(); i++) {
       if (i < ubig_value.size() - 1 && ubig_value[i + 1] % 2 == 1) {
          temp += ubig_value[i] + static_cast<uint8_t>(5);
       }
@@ -271,7 +278,7 @@ void ubigint::divide_by_2() {
    if (ubig_value[ubig_value.size() - 1] == 0) {
       ubig_value.pop_back();
    }
-   return
+   return;
 }
 
 
@@ -296,8 +303,8 @@ quo_rem udivide (const ubigint& dividend, const ubigint& divisor_) {
       divisor.divide_by_2();
       power_of_2.divide_by_2();
    }
-   DEBUGF ('/', "quotient = " << quotient);
-   DEBUGF ('/', "remainder = " << remainder);
+   // DEBUGF ('/', "quotient = " << quotient);
+   // DEBUGF ('/', "remainder = " << remainder);
    return {.quotient = quotient, .remainder = remainder};
 }
 
@@ -322,7 +329,7 @@ bool ubigint::operator== (const ubigint& that) const {
    if (ubig_value.size() != that.ubig_value.size()) {
       isEqual = false;
    } else {
-      int i = 0;
+      uint8_t i = 0;
       while (i < ubig_value.size() && isEqual) {
          if (ubig_value[i] != that.ubig_value[i]) {
             isEqual = false;
@@ -346,7 +353,7 @@ bool ubigint::operator< (const ubigint& that) const {
 
 ostream& operator<< (ostream& out, const ubigint& that) {
    string output;
-   for (int i = 0; i < that.ubig_value.size() - 1; i++) {
+   for (uint8_t i = 0; i < that.ubig_value.size() - 1; i++) {
       output = static_cast<char>(that.ubig_value[i]) + output;
    }
    return out << "ubigint(" << output << ")";
