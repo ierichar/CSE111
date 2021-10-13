@@ -7,6 +7,8 @@
 #include <iostream>
 #include <limits>
 #include <utility>
+#include <cstdint>
+#include <vector>
 using namespace std;
 
 #include "debug.h"

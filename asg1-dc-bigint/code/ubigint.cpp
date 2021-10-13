@@ -12,10 +12,8 @@ using namespace std;
 #include "relops.h"
 #include "ubigint.h"
 
-#define BASE static_cast<uint8_t>(10)
-
-ubigint::ubigint (unsigned long that): uvalue (that) {
-   DEBUGF ('~', this << " -> " << uvalue)
+ubigint::ubigint (unsigned long that): ubig_value (that) {
+   DEBUGF ('~', this << " -> " << ubig_value)
 }
 
 ubigint::ubigint (const string& that): ubig_value(0) {
@@ -53,7 +51,6 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    // DEBUGF ('u', *this << "+" << that);
    // ubigint result (ubig_value + that.ubig_value);
    // DEBUGF ('u', result);
-
    // new code
    // vector<int> leftInput;
 
