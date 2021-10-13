@@ -72,9 +72,11 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    // Append zeroes to smaller ubig_value and maintain original size
    uint8_t originalSize;
    if (sizeFlag) {
+
       for (int i = that.ubig_value.size(); i < ubig_value.size(); i++) {
          originalSize = that.ubig_value.size();
          that.ubig_value.push_back(static_cast<uint8_t>(0));
+
       }
    } else {
       for (int i = ubig_value.size(); i < that.ubig_value.size(); i++) {
