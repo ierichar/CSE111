@@ -86,7 +86,7 @@ ubigint ubigint::operator+ (const ubigint& that) const {
             temp -= 10;
             carryFlag = 1;
          }
-         result.push_back(temp);
+         result.ubig_value.push_back(temp);
       }
       // append zeroes after main loop
       while (i < ubig_value.size()) {
@@ -100,7 +100,7 @@ ubigint ubigint::operator+ (const ubigint& that) const {
             carryFlag = 1;
          }
          // REMEMBER FINAL CARRY
-         result.insert(0, temp);
+         result.ubig_value.insert(0, temp);
          i++;
       }
 
@@ -118,7 +118,7 @@ ubigint ubigint::operator+ (const ubigint& that) const {
             temp -= 10;
             carryFlag = 1;
          }
-         result.push_back(temp);
+         result.ubig_value.push_back(temp);
       }
       // append zeroes and potential carry after main loop
       while (i < that.ubig_value.size()) {
@@ -131,14 +131,14 @@ ubigint ubigint::operator+ (const ubigint& that) const {
             temp -= 10;
             carryFlag = 1;
          }
-         result.insert(0, temp);
+         result.ubig_value.insert(0, temp);
          i++;
       }
 
    }
    // if carry remains after previous calculations, add remaining carry
    if (carryFlag) {
-      result.insert(0, carryFlag);
+      result.ubig_value.insert(0, carryFlag);
       carryFlag = 0;
    }
 
