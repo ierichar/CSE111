@@ -59,7 +59,6 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    // DEBUGF ('u', *this << "+" << that);
    // ubigint result (ubig_value + that.ubig_value);
    // DEBUGF ('u', result);
-
    // new code
    // vector<int> leftInput;
 

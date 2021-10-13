@@ -4,6 +4,7 @@
 #include <exception>
 #include <stack>
 #include <stdexcept>
+#include <vector>
 using namespace std;
 
 #include "bigint.h"
@@ -38,12 +39,12 @@ bool val2negative = false;
 int val2RealSize = that.uvalue.size();
 
 //check element of each one
-if(uvalue[0] == "_"){
+if(uvalue[val1RealSize] == "_"){ //jump to end of vector 1, check for _
    val1negative = true;
    val1RealSize = val1RealSize - 1;
 }
 
-if(that.uvalue[0] == "_"){
+if(that.uvalue[val2RealSize] == "_"){ //jump to end of vector 2, check for _
    val2negative = true;
    val2RealSize = val2RealSize - 1;
 }
@@ -54,16 +55,16 @@ int temp2 = 0;
 
 if (val1RealSize == val2RealSize){
    if(val1negative){
-      temp1 = uvalue[1];
+      temp1 = uvalue[uvalue.size()-1];
    }
    else{
-      temp1 = uvalue[0];
+      temp1 = uvalue[uvalue.size()];
    }
    if(val2negative){
-      temp2 = that.uvalue[1];
+      temp2 = that.uvalue[that.uvalue.size()-1];
    }
    else{
-      temp2 = that.uvalue[0];
+      temp2 = that.uvalue[that.uvalue.size()];
    }
 
    if(temp1 > temp2){
@@ -80,11 +81,11 @@ if(isval1Larger){
    } 
    if((val1negative==true)&&(val2negative==true)){
       ubigint result {uvalue + that.uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
    }
    if((val1negative==true)&&(val2negative==false)){
        ubigint result {uvalue - that.uvalue};
-       result.is_negative();
+       result.ubig_value.push_back ("_");
       //run subtraction (-a+b) add negative
       
    }
@@ -100,12 +101,14 @@ if(isval1Larger){
    } 
    if((val1negative==true)&&(val2negative==true)){
       ubigint result {that.uvalue + uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
+      
       //do addition flip sign (-b+-a)
    }
    if((val1negative==true)&&(val2negative==false)){
       ubigint result {that.uvalue - uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
+      
       //run subtraction (-b+a) add negative
    }
    else{
@@ -147,19 +150,19 @@ if(isval1Larger){
 }
 
 bigint bigint::operator- (const bigint& that) const {
-   //uvalue(); that.uvalue();
+//uvalue(); that.uvalue();
 bool val1negative = false;
 int val1RealSize = uvalue.size();
 bool val2negative = false;
 int val2RealSize = that.uvalue.size();
 
 //check element of each one
-if(uvalue[0] == "_"){
+if(uvalue[val1RealSize] == "_"){ //jump to end of vector 1, check for _
    val1negative = true;
    val1RealSize = val1RealSize - 1;
 }
 
-if(that.uvalue[0] == "_"){
+if(that.uvalue[val2RealSize] == "_"){ //jump to end of vector 2, check for _
    val2negative = true;
    val2RealSize = val2RealSize - 1;
 }
@@ -170,22 +173,21 @@ int temp2 = 0;
 
 if (val1RealSize == val2RealSize){
    if(val1negative){
-      temp1 = uvalue[1];
+      temp1 = uvalue[uvalue.size()-1];
    }
    else{
-      temp1 = uvalue[0];
+      temp1 = uvalue[uvalue.size()];
    }
    if(val2negative){
-      temp2 = that.uvalue[1];
+      temp2 = that.uvalue[that.uvalue.size()-1];
    }
    else{
-      temp2 = that.uvalue[0];
+      temp2 = that.uvalue[that.uvalue.size()];
    }
 
    if(temp1 > temp2){
       isval1Larger = true;
    }
-
    //now that you know which value is larger, you can run the code below!
 }
 
@@ -197,12 +199,12 @@ if(isval1Larger){
    if((val1negative==true)&&(val2negative==true)){
       //do subtraction a-b slap on a negative
       ubigint result {uvalue - that.uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
    }
    if((val1negative==true)&&(val2negative==false)){
       //addition slap on a negative (-a-b)
       ubigint result {uvalue + that.uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
    }
    else{
       //run addition leave positive (a--b)
@@ -217,43 +219,18 @@ if(isval1Larger){
    if((val1negative==true)&&(val2negative==true)){
       //do subtraction (-(b-a)) slap on a negative
       ubigint result {that.uvalue - uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
    }
    if((val1negative==true)&&(val2negative==false)){
       //run addition (-b-a) put on a negative
       ubigint result {that.uvalue + uvalue};
-      result.is_negative();
+      result.ubig_value.push_back ("_");
    }
    else{
       //run addition (b--a) keep positive
       ubigint result {that.uvalue  uvalue};
    }
 }
-
-   //are strings same size?
-      //create a flag, isBLarger? yes, run first loop! no? run second loop.
-
-   //is B string larger than A string?
-      //same code as below but flip B and A when calling value!
-
-//is A string larger than B string?
-   //Yes!
-      //are the signs the same?
-         //yes!
-            //are they positive?
-               //yes!
-                  //run subtraction (a-b)
-               //no
-                  //rub subtraction(-a--b) = (-(a-b))
-         //no!
-            //is A negative?
-               //yes!
-                  //run addition (-a-b) (-16-13 = -29)
-               //no!
-                  //run addition (a--b) (32--16 = 48)
-
-
-
    ubigint result {uvalue - that.uvalue};
    // SUBTRACTION
    //are strings same size?
@@ -282,25 +259,89 @@ if(isval1Larger){
 
 
 bigint bigint::operator* (const bigint& that) const {
-   bigint result {uvalue * that.uvalue};
+   int numberOfNegatives = 0;
+   if(uvalue[uvalue.size()] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+      if(that.uvalue[uvalue.size()] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+   ubigint result {uvalue * that.uvalue};
+
+   if(numberOfNegatives==1){
+      result.ubig_value.push_back ("_");
+   }
    return result;
 }
 
 bigint bigint::operator/ (const bigint& that) const {
-   bigint result {uvalue / that.uvalue};
+   int numberOfNegatives = 0;
+   if(uvalue[0] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+   if(that.uvalue[0] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+   ubigint result {uvalue / that.uvalue};
+
+   if(numberOfNegatives==1){
+      result.ubig_value.push_back ("_");
+   }
    return result;
 }
 
 bigint bigint::operator% (const bigint& that) const {
-   bigint result {uvalue % that.uvalue};
+      int numberOfNegatives = 0;
+   if(uvalue[0] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+   if(that.uvalue[0] == "_"){
+      numberOfNegatives = numberOfNegatives + 1;
+   }
+   ubigint result {uvalue % that.uvalue};
+
+   if(numberOfNegatives==1){
+      result.ubig_value.push_back ("_");
+   }
    return result;
 }
 
 bool bigint::operator== (const bigint& that) const {
+int numberOfNegatives = 0;
+
+//check element of each one
+if(uvalue[uvalue.size()] == "_"){ // is there a negative
+   numberOfNegatives++;
+}
+
+if(that.uvalue[that.uvalue.size()] == "_"){ //is there  a negative
+   numberOfNegatives++;
+}
+if(numberOfNegatives==1){ //if there is an odd number of negatives, they can't possibly be the same.
+   return false;
+}
+
    return is_negative == that.is_negative and uvalue == that.uvalue;
 }
 
 bool bigint::operator< (const bigint& that) const {
+bool val1negative = false;
+bool val2negative = false;
+
+if(uvalue[uvalue.size()] == "_"){ // is there a negative
+   val1negative = true;
+}
+
+if(that.uvalue[that.uvalue.size()] == "_"){ //is there  a negative
+bool val2negative = true;
+}
+   if((val1negative==true)&&(val2negative==false){ //if left is negative and right is positive, it's true no matter what
+      return true;
+   }
+      if((val1negative==false)&&(val2negative==true){ // if left is positive and right is negative, its false no matter what.
+      return false;
+   }
+   
    if (is_negative != that.is_negative) return is_negative;
    return is_negative ? uvalue > that.uvalue
                       : uvalue < that.uvalue;
