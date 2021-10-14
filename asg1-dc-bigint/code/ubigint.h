@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: ubigint.h,v 1.5 2020-10-11 12:25:22-07 - - $
 
 #ifndef __UBIGINT_H__

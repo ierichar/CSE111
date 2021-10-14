@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: ubigint.cpp,v 1.12 2020-10-19 13:14:59-07 - - $
 
 #include <cctype>

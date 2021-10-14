@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: iterstack.h,v 1.1 2019-12-12 18:19:23-08 - - $
 
 // 

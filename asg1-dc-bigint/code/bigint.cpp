@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: bigint.cpp,v 1.4 2021-09-26 10:35:44-07 - - $
 
 #include <cstdlib>

@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: main.cpp,v 1.3 2021-03-26 15:29:03-07 - - $
 
 #include <cassert>

@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: debug.cpp,v 1.2 2021-03-31 19:46:57-07 - - $
 
 #include <climits>

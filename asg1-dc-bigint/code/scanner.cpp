@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: scanner.cpp,v 1.2 2021-09-26 10:35:44-07 - - $
 
 #include <cassert>

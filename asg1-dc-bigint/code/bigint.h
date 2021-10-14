@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: bigint.h,v 1.2 2020-01-06 13:39:55-08 - - $
 
 #ifndef __BIGINT_H__
