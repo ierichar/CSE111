@@ -6,3 +6,4 @@ asg1-dc-bigint/code/Makefile.deps
 asg1-dc-bigint/code/scanner.o
 asg1-dc-bigint/code/ubigint.o
 asg1-dc-bigint/code/util.o
+asg1-dc-bigint/code/ydc
