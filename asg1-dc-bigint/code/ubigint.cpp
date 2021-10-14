@@ -32,9 +32,7 @@ ubigint::ubigint (const string& that): ubig_value(0) {
       }
       //uvalue = uvalue * 10 + digit - '0';
       
-      for (uint8_t i = 0; i < that.length(); i++) {
-         ubig_value.push_back(that[i]);
-      }
+      ubig_value.push_back(static_cast<uint8_t>(digit));
       // str = "2 5 6"
       // v[] = [2]
       // v[] = [2][5]
@@ -79,17 +77,14 @@ ubigint ubigint::operator+ (const ubigint& that) const {
 
    ubigvalue_t larger_vector, smaller_vector;
    // Append zeroes to smaller ubig_value and maintain original size
-   uint8_t originalSize;
    if (sizeFlag) {
       for (uint8_t i = that.ubig_value.size(); i < ubig_value.size(); i++) {
-         originalSize = that.ubig_value.size();
          larger_vector = this->ubig_value;
          smaller_vector = that.ubig_value;
          smaller_vector.push_back(ZERO);
       }
    } else {
       for (uint8_t i = ubig_value.size(); i < that.ubig_value.size(); i++) {
-         originalSize = ubig_value.size();
          larger_vector = that.ubig_value;
          smaller_vector = this->ubig_value;
          smaller_vector.push_back(ZERO);
@@ -97,7 +92,7 @@ ubigint ubigint::operator+ (const ubigint& that) const {
    }
 
    // Add indecies in array
-   ubigint sum; // = (ubig_value.size() + 1, 0);
+   ubigint* sum = new ubigint(static_cast<uint8_t>(0)); // = (ubig_value.size() + 1, 0);
    uint8_t temp = 0, carryFlag = 0;
    for (uint8_t i = 0; i < ubig_value.size(); i++) {
       // Premptively check carry
@@ -111,13 +106,13 @@ ubigint ubigint::operator+ (const ubigint& that) const {
          temp -= BASE;
          carryFlag += 1;
       }
-      sum.ubig_value.push_back(temp);
+      sum->ubig_value.push_back(temp);
    }
    if (carryFlag > 0) {
-      sum.ubig_value.push_back(carryFlag);
+      sum->ubig_value.push_back(carryFlag);
    }
 
-   return sum;
+   return *sum;
 }
 
 ubigint ubigint::operator- (const ubigint& that) const {
@@ -140,7 +135,7 @@ ubigint ubigint::operator- (const ubigint& that) const {
    // [1 0 0 0 0 0]
    //-[0 0 0 0 9 9]
 
-   ubigint difference; // = (ubig_value.size(), 0);
+   ubigint* difference = new ubigint(static_cast<uint8_t>(0)); // = (ubig_value.size(), 0);
    uint8_t temp = 0, carryFlag;
    // assume that.ubig_value is > or == this.ubig_value
    for (uint8_t i = 0; i < ubig_value.size(); i++) {
@@ -151,25 +146,25 @@ ubigint ubigint::operator- (const ubigint& that) const {
       } else {
          temp += ubig_value[i] - that.ubig_value[i];
       }
-      difference.ubig_value.push_back(temp);
+      difference->ubig_value.push_back(temp);
    }
    // deal with carry and subtracting carry from subsequent values
    uint8_t i;
    while (i < ubig_value.size()) {
       if (carryFlag > 0) {
          if (ubig_value[i] == 0) {
-            difference.ubig_value.push_back(static_cast<uint8_t>(9));
+            difference->ubig_value.push_back(static_cast<uint8_t>(9));
          } else {
-            difference.ubig_value.push_back(ubig_value[i] - carryFlag);
+            difference->ubig_value.push_back(ubig_value[i] - carryFlag);
             carryFlag = 0;
          }
       } else {
-         difference.ubig_value.insert(difference.ubig_value.begin(), ubig_value[i]);
+         difference->ubig_value.insert(difference->ubig_value.begin(), ubig_value[i]);
       }
       i++;
    }
 
-   return difference;
+   return *difference;
    // return ubigint (ubig_value - that.ubig_value);
 }
 
@@ -186,17 +181,17 @@ ubigint ubigint::operator* (const ubigint& that) const {
    // 4 x 5 = 20 (while temp > 9) carry++ temp-=10
    // 2 + 5 x 5 = 27 (while temp > 9) carry++ temp-=10
 
-   ubigint product; // = (ubig_value.size() + that.ubig_value.size(), 0);
-   ubigint temp_vector;
+   ubigint* product = new ubigint(static_cast<uint8_t>(0)); // = (ubig_value.size() + that.ubig_value.size(), 0);
+   ubigint* temp_vector = new ubigint(static_cast<uint8_t>(0));
    if (ubig_value.size() > that.ubig_value.size()) {
       for (uint8_t i = 0; i < ubig_value.size(); i++) {
-         product.ubig_value.push_back(0);      // initialize product to add temp_vector to it
-         temp_vector.ubig_value.push_back(0);  // initialize temp_vector as well
+         product->ubig_value.push_back(0);      // initialize product to add temp_vector to it
+         temp_vector->ubig_value.push_back(0);  // initialize temp_vector as well
       }
    } else {
       for (uint8_t i = 0; i < that.ubig_value.size(); i++) {
-         product.ubig_value.push_back(0);      // initialize product to add temp_vector to it
-         temp_vector.ubig_value.push_back(0);  // initialize temp_vector as well
+         product->ubig_value.push_back(0);      // initialize product to add temp_vector to it
+         temp_vector->ubig_value.push_back(0);  // initialize temp_vector as well
       }
    }
 
@@ -221,19 +216,19 @@ ubigint ubigint::operator* (const ubigint& that) const {
             carryValue += 1;
             temp -= BASE;
          }
-         temp_vector.ubig_value.push_back(temp);
+         temp_vector->ubig_value.push_back(temp);
          temp = 0;
       }
-      temp_vector.ubig_value.insert(temp_vector.ubig_value.begin(), static_cast<uint8_t>(0), power_count);
+      temp_vector->ubig_value.insert(temp_vector->ubig_value.begin(), static_cast<uint8_t>(0), power_count);
       // requires operator+ to be functional
-      product = (product + temp_vector);
+      *product = (*product + *temp_vector);
       power_count++;
    }
    // if a carry value remains outside of all loops, insert at 0 to prodcut
    if (carryValue > 0) {
-      product.ubig_value.push_back(carryValue);
+      product->ubig_value.push_back(carryValue);
    }
-   return product;
+   return *product;
    // return ubigint (uvalue * that.uvalue);
 }
 
@@ -341,13 +336,19 @@ bool ubigint::operator== (const ubigint& that) const {
 }
 
 bool ubigint::operator< (const ubigint& that) const {
-   bool isLess = true;
    if (ubig_value.size() < that.ubig_value.size()) {
-      isLess = true;
+      return true;
    } else {
-      isLess = false;
+      if (ubig_value.size() == that.ubig_value.size()) {
+         for (uint8_t i = ubig_value.size(); i >= 0; i--) {
+            if (ubig_value[i] < that.ubig_value[i]) {
+               return true;
+            }
+         }
+      } else {
+         return false;
+      }
    }
-   return isLess;
    // return ubig_value < that.ubig_value;
 }
 
