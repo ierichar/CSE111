@@ -1,0 +1,8 @@
+asg1-dc-bigint/code/bigint.o
+asg1-dc-bigint/code/debug.o
+asg1-dc-bigint/code/libfns.o
+asg1-dc-bigint/code/main.o
+asg1-dc-bigint/code/Makefile.deps
+asg1-dc-bigint/code/scanner.o
+asg1-dc-bigint/code/ubigint.o
+asg1-dc-bigint/code/util.o
