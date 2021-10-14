@@ -10,7 +10,6 @@ using namespace std;
 
 #include "debug.h"
 #include "relops.h"
-#include "ubigint.h"
 
 #define BASE static_cast<uint8_t>(10)
 #define ZERO static_cast<uint8_t>(0)

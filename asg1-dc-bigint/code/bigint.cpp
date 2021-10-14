@@ -12,14 +12,14 @@ using namespace std;
 
 bigint::bigint (long that): uvalue (that), is_negative (that < 0) {
    DEBUGF ('~', this << " -> " << uvalue)
-      if(that < 0){
-         unsigned long temp = that*-1;
-         uvalue (temp);//accesses Ubigint function and creates a new ubigint to refer to bigint
-      }
-      else{
-         unsigned long temp = that;
-         uvalue (temp);
-      }
+      // if(that < 0){
+      //    unsigned long temp = static_cast<unsigned long>(that*-1);
+      //    uvalue (*temp);//accesses Ubigint function and creates a new ubigint to refer to bigint
+      // }
+      // else{
+      //    unsigned long temp = static_cast<unsigned long>(that);
+      //    uvalue (*temp);
+      // }
 }
 
 bigint::bigint (const ubigint& uvalue_, bool is_negative_):
