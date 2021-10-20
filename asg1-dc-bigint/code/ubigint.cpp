@@ -20,7 +20,6 @@ using namespace std;
 #define DIGIT 48
 
 ubigint::ubigint (unsigned long that): ubig_value (that) {
-   // DEBUGF ('~', this << " -> " << ubig_value)
    unsigned long result = that;
    while (result > 0) {
       result %= 10;
@@ -29,21 +28,17 @@ ubigint::ubigint (unsigned long that): ubig_value (that) {
 }
 
 ubigint::ubigint (const string& that): ubig_value(0) {
-   // DEBUGF ('~', "that = \"" << that << "\"");
    for (char digit: that) {
       if (not isdigit (digit)) {
          throw invalid_argument ("ubigint::ubigint(" + that + ")");
       }
       //uvalue = uvalue * 10 + digit - '0';
-      ubig_value.insert(ubig_value.begin(), static_cast<uint8_t>(digit));
+      ubig_value.insert(ubig_value.begin(), 
+       static_cast<uint8_t>(digit));
    }
 }
 
 ubigint ubigint::operator+ (const ubigint& that) const {
-   // DEBUGF ('u', *this << "+" << that);
-   // ubigint result (ubig_value + that.ubig_value);
-   // DEBUGF ('u', result);
-
    // Checks for larger operand and set flag
    bool sizeFlag;
    if (ubig_value.size() > that.ubig_value.size()) {
@@ -110,22 +105,6 @@ ubigint ubigint::operator- (const ubigint& that) const {
    // a is predetermined to be less than b, otherwise throw error
    if (*this < that) throw domain_error ("ubigint::operator-(a<b)");
 
-   // bigint is given:
-   // OG: -24500 + 110
-   //   : -230032 - 123123 (pass to operator+)
-   // result is negative so..
-   // pass +24500 - 110
-   // operator-
-   // bigint passing: a >= b
-   // a - b
-   // 24500 - 110
-   // result is passed back to bigint
-   // bigint knew was negative
-   // OG: a negative result 
-
-   // [1 0 0 0 0 0]
-   //-[0 0 0 0 9 9]
-
    ubigint* difference = new ubigint("0");
    difference->ubig_value.pop_back();
    uint8_t temp = 0;
@@ -134,13 +113,13 @@ ubigint ubigint::operator- (const ubigint& that) const {
    for (int i = 0; i < ubig_value.size(); i++) {
       if (ubig_value[i] < that.ubig_value[i]) {
          carryFlag += 1;
-         temp = ubig_value[i] - DIGIT + BASE - DIGIT;
+         temp = ubig_value[i] - DIGIT + BASE;
          // Deal with ASCII conversion
          temp -= that.ubig_value[i] - DIGIT;
       } else {
          temp += ubig_value[i] - DIGIT - that.ubig_value[i] - DIGIT;
       }
-      difference->ubig_value.push_back(temp);
+      difference->ubig_value.push_back(static_cast<uint8_t>(temp));
    }
    // deal with carry and subtracting carry from subsequent values
    int i;
@@ -150,7 +129,7 @@ ubigint ubigint::operator- (const ubigint& that) const {
             difference->ubig_value.push_back(static_cast<uint8_t>(9));
          } else {
             difference->ubig_value.push_back(ubig_value[i] - DIGIT -
-             carryFlag - DIGIT);
+             carryFlag);
             carryFlag = 0;
          }
       } else {
@@ -161,26 +140,16 @@ ubigint ubigint::operator- (const ubigint& that) const {
    }
 
    return *difference;
-   // return ubigint (ubig_value - that.ubig_value);
 }
 
 ubigint ubigint::operator* (const ubigint& that) const {
    // vector will never be more than twice the combined # of elements
    // double for loop
-   // [1 2 5 4]
-   // x   [1 5]
-   // temp = [5] x [1254] x 10^0 (append a zero to the back) (1)
-   // temp = [1] x [1254] x 10^1 
-   // product += temp (calling ubigint operater+)
-
-   // (1)
-   // 4 x 5 = 20 (while temp > 9) carry++ temp-=10
-   // 2 + 5 x 5 = 27 (while temp > 9) carry++ temp-=10
 
    ubigint* product = new ubigint("0");
    ubigint* temp_vector = new ubigint("0");
-   sum->ubig_value.pop_back();
-   sum->ubig_value.pop_back();
+   product->ubig_value.pop_back();
+   temp_vector->ubig_value.pop_back();
 
    int carryValue = 0;
    int operand1, operand2, temp;
@@ -202,7 +171,7 @@ ubigint ubigint::operator* (const ubigint& that) const {
          temp += (operand1 - DIGIT) * (operand2 - DIGIT);
          while (temp >= BASE) {
             carryValue += 1;
-            temp -= BASE - DIGIT;
+            temp -= BASE;
          }
          temp_vector->ubig_value.push_back(static_cast<uint8_t>(temp));
          temp = 0;
@@ -216,10 +185,9 @@ ubigint ubigint::operator* (const ubigint& that) const {
    // if a carry value remains outside of all loops, 
    // insert at 0 to prodcut
    if (carryValue > 0) {
-      product->ubig_value.push_back(carryValue);
+      product->ubig_value.push_back(static_cast<uint8_t>(carryValue));
    }
    return *product;
-   // return ubigint (uvalue * that.uvalue);
 }
 
 void ubigint::multiply_by_2() {
@@ -290,8 +258,6 @@ quo_rem udivide (const ubigint& dividend, const ubigint& divisor_) {
       divisor.divide_by_2();
       power_of_2.divide_by_2();
    }
-   // DEBUGF ('/', "quotient = " << quotient);
-   // DEBUGF ('/', "remainder = " << remainder);
    return {.quotient = quotient, .remainder = remainder};
 }
 
@@ -316,7 +282,6 @@ bool ubigint::operator== (const ubigint& that) const {
       }
    }
    return isEqual;
-   // return ubig_value == that.ubig_value;
 }
 
 bool ubigint::operator< (const ubigint& that) const {
@@ -324,7 +289,7 @@ bool ubigint::operator< (const ubigint& that) const {
       return true;
    } else {
       if (ubig_value.size() == that.ubig_value.size()) {
-         for (int i = ubig_value.size(); i >= 0; i--) {
+         for (int i = ubig_value.size() - 1; i >= 0; i--) {
             if (ubig_value[i] < that.ubig_value[i]) {
                return true;
             }
@@ -334,15 +299,14 @@ bool ubigint::operator< (const ubigint& that) const {
       }
       return false;
    }
-   // return ubig_value < that.ubig_value;
 }
 
 ostream& operator<< (ostream& out, const ubigint& that) {
    string output = "";
    for (int i = 0; i < that.ubig_value.size(); i++) {
-      char c = that.ubig_value[i] - DIGIT;
+      char c = static_cast<int> (that.ubig_value[i]);
       output += c;
    }
-   return out << "ubigint(" << output << ")";
+   return out << output;
 }
 
