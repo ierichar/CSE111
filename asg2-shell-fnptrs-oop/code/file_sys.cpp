@@ -104,7 +104,19 @@ void directory::remove (const string& filename) {
 
 inode_ptr directory::mkdir (const string& dirname) {
    DEBUGF ('i', dirname);
-   return nullptr;
+   try:
+      // Checks if directory already exists
+      if (dirents.find(dirname) != dirents.end()) {
+         throw exception;
+      }
+      file_type directory_type {1};
+      inode* new_inode = new inode(directory_type);
+      inode_ptr new_inode_ptr (new_inode);
+      dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
+   catch:
+      cerr << ""
+      return nullptr;
+   return new_inode_ptr;
 }
 
 inode_ptr directory::mkfile (const string& filename) {
