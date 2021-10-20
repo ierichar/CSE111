@@ -22,6 +22,8 @@ class plain_file;
 class directory;
 using inode_ptr = shared_ptr<inode>;
 using base_file_ptr = shared_ptr<base_file>;
+using plain_file_ptr = shared_ptr<plain_file>;
+using directory_ptr = shared_ptr<directory>;
 ostream& operator<< (ostream&, file_type);
 
 

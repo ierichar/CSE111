@@ -81,6 +81,15 @@ void fn_make (inode_state& state, const wordvec& words) {
 void fn_mkdir (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   // inode_state& state is changed by:
+   //     wordvec& words-> directory()-> inode_ptr directory::mkdir()
+   // inode_ptr is added to inode_state&
+   // we need to know:
+   //    size_t curr_size = state.get_inode_nr();
+   //    inode 
+   directory new_directory = directory();
+   new_directory.mkdir(words[1]);
+   cout << state << endl;
 }
 
 void fn_prompt (inode_state& state, const wordvec& words) {
