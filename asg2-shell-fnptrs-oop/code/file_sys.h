@@ -45,6 +45,11 @@ class inode_state {
       inode_state();
       const string& prompt() const;
       void prompt (const string&);
+      // Accessors
+      inode_ptr get_root() const;
+      inode_ptr get_cwd() const;
+      // Mutators
+      void set_cwd(inode_ptr);
 };
 
 // class inode -
@@ -71,7 +76,11 @@ class inode {
       inode (const inode&) = delete;
       inode& operator= (const inode&) = delete;
       inode (file_type);
+      // Accessors
       size_t get_inode_nr() const;
+      size_t get_next_inode() const;
+      void increment_nr();
+      void decrement_nr();
 };
 
 
