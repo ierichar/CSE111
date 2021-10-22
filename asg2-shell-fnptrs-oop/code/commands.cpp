@@ -88,7 +88,9 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
    //    size_t curr_size = state.get_inode_nr();
    //    inode 
    directory new_directory = directory();
-   new_directory.mkdir(words[1]);
+   inode_ptr new_inode_ptr = new_directory.mkdir(words[1]);
+   new_inode_ptr->increment_nr();
+   state.set_cwd(new_inode_ptr);
    cout << state << endl;
 }
 
@@ -100,6 +102,16 @@ void fn_prompt (inode_state& state, const wordvec& words) {
 void fn_pwd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   // if (state.get_cwd() != state.get_root()) {
+   //    string filePath = "";
+   //    inode_state current_state = state.get_cwd();
+   //    while (state.get_cwd() != state.get_root()) {
+   //       // filePath = state.get_cwd()->contents->directory string
+   //       // decrement state
+   //       // repoint cwd
+   //    }
+   // }
+   // cout << state.get_cwd() << endl;
 }
 
 void fn_rm (inode_state& state, const wordvec& words) {
