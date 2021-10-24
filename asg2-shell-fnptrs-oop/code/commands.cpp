@@ -50,17 +50,42 @@ void fn_cd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', words);
    // Change state according to words[1] (which is a directory or . or ..)
    // words[1] to directory to retrieve inode_ptr
+   // . and .. are interpreted by fn_cd
    try {
-      inode_ptr new_inode_ptr = 
-         state.get_cwd()->get_contents()->get_directory_inode(words[1]);
-      if (new_inode_ptr == nullptr) {
-         throw runtime_error(words[1]);
+
+      if (words[1] == "/") {
+         state.go_to_root();
+         state.set_cwd(state.get_root());
+         cout << state.get_pathname() << endl;
+      } else if (words[1] == ".") {
+         cout << state.get_pathname() << endl;
+      } else if (words[1] == "..") {
+         state.subtract_filepath();
+         // need to also include a map search for parent directory
+         state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(words[1]));
+      } else {
+         // cd [filepath]
+         // requires searching from root to current path
+         // the input is looking for
+         // Suggest: using map in directory
+         // maybe create a search_directory() function
+         cout << "need to implement search" << endl;
+         return;
       }
-      cout << "state.get_cwd():" << state.get_cwd() << endl;
-      state.get_cwd()->set_inode_nr(new_inode_ptr->get_inode_nr());
-      state.get_cwd()->set_next_inode_nr(new_inode_ptr->get_next_inode());
-      state.set_cwd(new_inode_ptr);
-      state.get_cwd()->set_contents(new_inode_ptr->get_contents());
+      return;
+
+      // inode_ptr new_inode_ptr = 
+      //    state.get_cwd()->get_contents()->get_directory_inode(words[1]);
+      // cout << "state.get_cwd():" << state.get_cwd() << endl;
+
+      // if (new_inode_ptr == nullptr) {
+      //    throw runtime_error(words[1]);
+      // }
+      // cout << "state.get_cwd():" << state.get_cwd() << endl;
+      // state.get_cwd()->set_inode_nr(new_inode_ptr->get_inode_nr());
+      // state.get_cwd()->set_next_inode_nr(new_inode_ptr->get_next_inode());
+      // state.set_cwd(new_inode_ptr);
+      // state.get_cwd()->set_contents(new_inode_ptr->get_contents());
 
    } catch (runtime_error& error) {
       cout << "fn_cd error: " << words[1] << " does not exist" << endl;
@@ -110,6 +135,7 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
    
    // Insert new_inode_ptr to current directory's map
    state.set_cwd(new_inode_ptr);
+   state.add_filepath(words[1]);
    new_inode_ptr->increment_nr();
    cout << state << endl;
 }
@@ -122,8 +148,7 @@ void fn_prompt (inode_state& state, const wordvec& words) {
 void fn_pwd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-
-   cout << state.get_cwd() << endl;
+   cout << state.get_pathname() << endl;
 }
 
 void fn_rm (inode_state& state, const wordvec& words) {
