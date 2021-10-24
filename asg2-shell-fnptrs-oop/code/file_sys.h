@@ -39,6 +39,7 @@ class inode_state {
       inode_ptr root {nullptr};
       inode_ptr cwd {nullptr};
       string prompt_ {"% "};
+      wordvec pathname;
    public:
       inode_state (const inode_state&) = delete; // copy ctor
       inode_state& operator= (const inode_state&) = delete; // op=
@@ -46,10 +47,14 @@ class inode_state {
       const string& prompt() const;
       void prompt (const string&);
       // Accessors
-      inode_ptr get_root() const;
-      inode_ptr get_cwd() const;
+      inode_ptr get_root(void) const;
+      inode_ptr get_cwd(void) const;
+      string get_pathname(void) const;
       // Mutators
       void set_cwd(const inode_ptr);
+      void go_to_root(void);
+      string subtract_filepath(void);
+      void add_filepath(const string&);
 };
 
 // class inode -
