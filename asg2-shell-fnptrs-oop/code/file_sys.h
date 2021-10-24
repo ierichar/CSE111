@@ -49,7 +49,7 @@ class inode_state {
       inode_ptr get_root() const;
       inode_ptr get_cwd() const;
       // Mutators
-      void set_cwd(inode_ptr);
+      void set_cwd(const inode_ptr);
 };
 
 // class inode -
@@ -79,6 +79,11 @@ class inode {
       // Accessors
       size_t get_inode_nr() const;
       size_t get_next_inode() const;
+      base_file_ptr get_contents() const;
+      // Mutators
+      void set_inode_nr(const size_t);
+      void set_next_inode_nr(const size_t);
+      void set_contents(const base_file_ptr);
       void increment_nr();
       void decrement_nr();
 };
@@ -108,6 +113,7 @@ class base_file {
       virtual void remove (const string& filename);
       virtual inode_ptr mkdir (const string& dirname);
       virtual inode_ptr mkfile (const string& filename);
+      virtual inode_ptr get_directory_inode (const string& dirname);
 };
 
 // class plain_file -
@@ -163,6 +169,7 @@ class directory: public base_file {
       virtual void remove (const string& filename) override;
       virtual inode_ptr mkdir (const string& dirname) override;
       virtual inode_ptr mkfile (const string& filename) override;
+      virtual inode_ptr get_directory_inode (const string& dirname) override;
 };
 
 #endif
