@@ -39,34 +39,24 @@ ostream& operator<< (ostream& out, file_type type) {
 inode_state::inode_state() {
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
-   // initialize inode_state AND inode attributes
-   // INODE_STATE
-   // inode_ptr root = inode_state (initial inode state)
-   // inode_ptr cwd = root;
-   // string prompt_ = prompt()
 
-   // Initialize inode_ptr from inode
-   // base_file_ptr contents = 
-   //    (a directory of <string = "/", inode_ptr = itself)
+   // Create new inode with directory_type
+   file_type directory_type {file_type::DIRECTORY_TYPE};
+   inode new_inode = inode(directory_type);
+   inode_ptr new_inode_ptr (&new_inode);
 
-   // Create new node with directory_type
-   file_type directory_type {1};
-   inode* new_inode = new inode(directory_type);
-   inode_ptr new_inode_ptr (new_inode);
    // Create new directory_ptr from directory named root "/"
-   directory* new_directory = new directory();
-   new_directory->mkdir("/");
-   directory_ptr new_directory_ptr (new_directory);
+   directory new_directory = directory();
 
-   // Insert inode directory
-   new_inode->contents = new_directory_ptr;
-   new_inode->inode_nr = new_inode->next_inode_nr;
-   new_inode->next_inode_nr++;
-   // Initialize inode_state
-   this->root = new_inode_ptr; // ..
-   this->cwd = new_inode_ptr;  // .
+   // inode_state initialization
+   this->root = new_directory.mkdir("/");
+   this->cwd = this->root;
+   this->root->contents = directory_ptr;
    this->prompt_ = prompt();
    this->pathname.push_back("/");
+
+   cout << "next_inode_nr" << this->root->next_inode_nr << endl;
+   cout << "inode_nr: " << this->root->inode_nr << endl;
 }
 
 const string& inode_state::prompt() const { return prompt_; }
@@ -81,7 +71,7 @@ inode_ptr inode_state::get_cwd() const {
    return cwd;
 }
 
-string inode_state::get_pathname() const {
+string inode_state::pathname_to_string() const {
    DEBUGF ('i', "pathname = " << pathname);
    string filepath = "";
    for (size_t i = 0; i < pathname.size(); i++) {
@@ -105,17 +95,6 @@ void inode_state::go_to_root(void) {
    while (pathname.size() > 1) {
       pathname.pop_back();
    }
-}
-
-string inode_state::subtract_filepath(void) {
-   // Return new pathname after pop_back
-   pathname.pop_back();
-   return this->get_pathname();
-}
-
-void inode_state::add_filepath(const string& new_directory) {
-   // Has precondition that new directory is valid
-   pathname.push_back(new_directory);
 }
 
 ostream& operator<< (ostream& out, const inode_state& state) {
@@ -165,24 +144,6 @@ void inode::set_next_inode_nr(const size_t next_inode_nr_) {
 void inode::set_contents(const base_file_ptr contents_) {
    DEBUGF ('i', "contents = " << contents_);
    this->contents = contents_;
-}
-
-void inode::increment_nr() {
-   size_t temp = next_inode_nr;
-   inode_nr = temp;
-   next_inode_nr++;
-}
-
-void inode::decrement_nr() {
-   try {
-      if (inode_nr == 1) {
-         throw inode_error();
-      }
-      next_inode_nr--;
-      inode_nr--;
-   } catch (inode_error&) {
-      cout << "directory error: trying to go beyond root" << endl;
-   }
 }
 
 
@@ -243,15 +204,26 @@ void directory::remove (const string& filename) {
 inode_ptr directory::mkdir (const string& dirname) {
    DEBUGF ('i', dirname);
    try {
-      // Checks if directory already exists
+      if (dirname == "." || dirname == "..") {
+         throw base_file_error();
+      }
+      // Checks if directory does not exist and is root directory
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
          // Create new inode of directory type
-         file_type directory_type {1};
-         inode* new_inode = new inode(directory_type);
-         inode_ptr new_inode_ptr (new_inode);
+         file_type directory_type {file_type::DIRECTORY_TYPE};
+         inode new_inode = inode(directory_type);
+         inode_ptr new_inode_ptr (&new_inode);
 
-         // Insert root directory, "." and ".."
+         cout << "mkdir(): C1 storing dirname " << dirname << endl;
          dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
+
+         // Create subdirectories '.' and '..'
+         new_inode_ptr->contents->dirents.insert( 
+            pair<string,inode_ptr>(".", new_inode_ptr) 
+         );
+         new_inode_ptr->contents->dirents.insert(
+            pair<string,inode_ptr>("..", new_inode_ptr)
+         );
 
          return new_inode_ptr;
       } 
@@ -260,13 +232,22 @@ inode_ptr directory::mkdir (const string& dirname) {
       } 
       else {
          // Create new inode of directory type
-         file_type directory_type {1};
-         inode* new_inode = new inode(directory_type);
-         inode_ptr new_inode_ptr (new_inode);
+         file_type directory_type {file_type::DIRECTORY_TYPE};
+         inode new_inode = inode(directory_type);
+         inode_ptr new_inode_ptr (&new_inode);
 
          // Insert inode directory to send to fn_mkdir
+         cout << "mkdir(): C2 storing dirname " << dirname << endl;
          dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
-         
+
+         // create subdirectories '.' and '..'
+         new_inode_ptr->contents->dirents.insert(
+            pair<string,inode_ptr>(".", new_inode_ptr)
+         );
+         new_inode_ptr->contents->dirents.insert(
+            pair<string,inode_ptr>("..", this)
+         );
+
          return new_inode_ptr;
       }
    }
@@ -286,7 +267,8 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    DEBUGF ('i', dirname);
    try {
       cout << "get_directory_inode(): passing " << dirname << endl;
-      if (dirents.find(dirname) == dirents.end()) {
+      print_dirents();
+      if (dirents.find(dirname) == dirents.end() && dirents.find(dirname + "/") == dirents.end()) {
          throw base_file_error();
       }
       return dirents[dirname];
@@ -294,5 +276,11 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
       cout << "directory error: " << dirname << " does not exist";
       cout << endl;
       return nullptr;
+   }
+}
+
+void directory::print_dirents (void) {
+   for (std::map<string,inode_ptr>::iterator i = dirents.begin(); i != dirents.end(); ++i) {
+      cout << "dirents.key: " << i->first << endl;
    }
 }

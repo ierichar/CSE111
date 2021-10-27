@@ -51,45 +51,47 @@ void fn_cd (inode_state& state, const wordvec& words) {
    // Change state according to words[1] (which is a directory or . or ..)
    // words[1] to directory to retrieve inode_ptr
    // . and .. are interpreted by fn_cd
-   try {
+   // try {
+   //    // Case 1:% cd /
+   //    if (words[1] == "/") {
+   //       state.go_to_root();
+   //       state.set_cwd(state.get_root());
+   //       cout << state.pathname_to_string() << endl;
+   //    }
+   //    // Case 2:% cd . 
+   //    else if (words[1] == ".") {
+   //       cout << state.pathname_to_string() << endl;
+   //    } 
+   //    // Case 3:% cd ..
+   //    else if (words[1] == "..") {
+   //       // if state is root, return root
+   //       if (state.get_cwd() == state.get_root()) {
+   //          cout << state.pathname_to_string();
+   //       } else {
+   //          // else, return previous directory
+   //          state.subtract_filepath();
+   //          string path_to_dir = state.pathname_to_string();
+   //          state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(path_to_dir));
+   //       }
+   //    }
+   //    // Case 4:% cd [filepath]
+   //    else {
+   //       // cd [filepath]
+   //       // requires searching from root to current path
+   //       // the input is looking for
+   //       // Suggest: using map in directory
+   //       // maybe create a search_directory() function
 
-      if (words[1] == "/") {
-         state.go_to_root();
-         state.set_cwd(state.get_root());
-         cout << state.get_pathname() << endl;
-      } else if (words[1] == ".") {
-         cout << state.get_pathname() << endl;
-      } else if (words[1] == "..") {
-         state.subtract_filepath();
-         // need to also include a map search for parent directory
-         state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(words[1]));
-      } else {
-         // cd [filepath]
-         // requires searching from root to current path
-         // the input is looking for
-         // Suggest: using map in directory
-         // maybe create a search_directory() function
-         cout << "need to implement search" << endl;
-         return;
-      }
-      return;
 
-      // inode_ptr new_inode_ptr = 
-      //    state.get_cwd()->get_contents()->get_directory_inode(words[1]);
-      // cout << "state.get_cwd():" << state.get_cwd() << endl;
 
-      // if (new_inode_ptr == nullptr) {
-      //    throw runtime_error(words[1]);
-      // }
-      // cout << "state.get_cwd():" << state.get_cwd() << endl;
-      // state.get_cwd()->set_inode_nr(new_inode_ptr->get_inode_nr());
-      // state.get_cwd()->set_next_inode_nr(new_inode_ptr->get_next_inode());
-      // state.set_cwd(new_inode_ptr);
-      // state.get_cwd()->set_contents(new_inode_ptr->get_contents());
+   //       cout << "need to implement search" << endl;
+   //       return;
+   //    }
+   //    return;
 
-   } catch (runtime_error& error) {
-      cout << "fn_cd error: " << words[1] << " does not exist" << endl;
-   }
+   // } catch (runtime_error& error) {
+   //    cout << "fn_cd error: " << words[1] << " does not exist" << endl;
+   // }
    // then the state can reset to inode_ptr
 }
 
@@ -131,13 +133,10 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
    //    size_t curr_size = state.get_inode_nr();
    //    inode
 
+   // append entire state.pathname to words[1]
+   cout << "fn_mkdir() passing: " << new_directory << endl;
    inode_ptr new_inode_ptr = state.get_cwd()->get_contents()->mkdir(words[1]);
-   
-   // Insert new_inode_ptr to current directory's map
-   state.set_cwd(new_inode_ptr);
-   state.add_filepath(words[1]);
-   new_inode_ptr->increment_nr();
-   cout << state << endl;
+
 }
 
 void fn_prompt (inode_state& state, const wordvec& words) {
@@ -148,7 +147,7 @@ void fn_prompt (inode_state& state, const wordvec& words) {
 void fn_pwd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   cout << state.get_pathname() << endl;
+   cout << state.pathname_to_string() << endl;
 }
 
 void fn_rm (inode_state& state, const wordvec& words) {
