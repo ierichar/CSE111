@@ -32,6 +32,7 @@ ostream& operator<< (ostream&, file_type);
 
 class inode_state {
    friend class inode;
+   friend class directory;
    friend ostream& operator<< (ostream& out, const inode_state&);
    private:
       inode_ptr root {nullptr};
@@ -51,6 +52,8 @@ class inode_state {
       // Mutators
       void set_cwd(const inode_ptr);
       void go_to_root(void);
+      void add_filepath(const string&);
+      string pop_filepath(void);
 };
 
 // class inode -
@@ -68,6 +71,7 @@ class inode_state {
 
 class inode {
    friend class inode_state;
+   friend class directory;
    private:
       static size_t next_inode_nr;
       size_t inode_nr;
@@ -110,9 +114,10 @@ class base_file {
       virtual const wordvec& readfile() const;
       virtual void writefile (const wordvec& newdata);
       virtual void remove (const string& filename);
-      virtual inode_ptr mkdir (const string& dirname);
+      virtual inode_ptr mkdir (inode_state& state, const string& dirname);
       virtual inode_ptr mkfile (const string& filename);
       virtual inode_ptr get_directory_inode (const string& dirname);
+      virtual map<string,inode_ptr>& get_dirents (void);
 };
 
 // class plain_file -
@@ -156,6 +161,8 @@ class plain_file: public base_file {
 //    a dirent with that name exists.
 
 class directory: public base_file {
+   friend class inode;
+   friend class inode_state;
    private:
       // Must be a map, not unordered_map, so printing is lexicographic
       map<string,inode_ptr> dirents;
@@ -166,10 +173,10 @@ class directory: public base_file {
    public:
       virtual size_t size() const override;
       virtual void remove (const string& filename) override;
-      virtual inode_ptr mkdir (const string& dirname) override;
+      virtual inode_ptr mkdir (inode_state& state, const string& dirname) override;
       virtual inode_ptr mkfile (const string& filename) override;
       virtual inode_ptr get_directory_inode (const string& dirname) override;
-      void print_dirents (void);
+      virtual map<string,inode_ptr>& get_dirents (void) override;
 };
 
 #endif
