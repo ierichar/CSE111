@@ -56,6 +56,7 @@ class inode_state {
       void go_to_root(void);
       void add_filepath(const string&);
       string pop_filepath(void);
+      void set_prompt_ (const string&);
 };
 
 // class inode -
@@ -116,11 +117,12 @@ class base_file {
       base_file& operator= (const base_file&) = delete;
       virtual size_t size() const = 0;
       virtual const wordvec& readfile() const;
-      virtual void writefile (const wordvec& newdata);
+      virtual void writefile (const inode_state& state, const wordvec& newdata);
       virtual void remove (const string& filename);
       virtual inode_ptr mkdir (inode_state& state, const string& dirname);
       virtual inode_ptr mkfile (const string& filename);
       virtual inode_ptr get_directory_inode (const string& dirname);
+      virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void);
 };
 
@@ -143,7 +145,7 @@ class plain_file: public base_file {
    public:
       virtual size_t size() const override;
       virtual const wordvec& readfile() const override;
-      virtual void writefile (const wordvec& newdata) override;
+      virtual void writefile (const inode_state& state, const wordvec& newdata) override;
 };
 
 // class directory -
@@ -180,6 +182,7 @@ class directory: public base_file {
       virtual inode_ptr mkdir (inode_state& state, const string& dirname) override;
       virtual inode_ptr mkfile (const string& filename) override;
       virtual inode_ptr get_directory_inode (const string& dirname) override;
+      virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void) override;
 };
 

@@ -85,6 +85,12 @@ void inode_state::set_cwd(const inode_ptr cwd_) {
    this->cwd = cwd_;
 }
 
+void inode_state::set_prompt_(const string& word){
+   this->prompt_ += word;
+   //word[3] = "null";
+}
+
+
 void inode_state::go_to_root(void) {
    // Reset pathname to "/"
    while (pathname.size() > 1) {
@@ -181,7 +187,7 @@ const wordvec& base_file::readfile() const {
    throw file_error ("is a " + error_file_type());
 }
 
-void base_file::writefile (const wordvec&) {
+void base_file::writefile (const inode_state&, const wordvec&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -201,6 +207,11 @@ inode_ptr base_file::get_directory_inode (const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
+
+inode_ptr base_file::get_file_inode (const inode_state&, const string&) {
+   throw file_error ("is a " + error_file_type());
+}
+
 map<string,inode_ptr>& base_file::get_dirents (void) {
    throw file_error ("is a " + error_file_type());
 }
@@ -217,8 +228,28 @@ const wordvec& plain_file::readfile() const {
    return data;
 }
 
-void plain_file::writefile (const wordvec& words) {
-   DEBUGF ('i', words);
+void plain_file::writefile (const inode_state& state, const wordvec& words) {
+   // DEBUGF ('i', words);
+   //    //find the file first
+   // //dirents.find(words[1]);
+   // //open the file
+   // this->inode_state.get_cwd()->get_contents->dirents.find(words[1]).open("");
+   // //write into the file first
+   // int i = 2;
+   // while (words[2]!= ""){
+   //    dirents.find(words[1]) << words[i];
+   //    i++;
+   // }
+   // dirents.find(words[1]).close();
+
+     state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents(); //open
+      int i = 2;
+   while (words[i]!= ""){
+     state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //<< words[i];
+      i++;
+   }
+   state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //close();
+
 }
 
 size_t directory::size() const {
@@ -237,6 +268,9 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
       // Checks if directory already exists
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
          // Create new inode of directory type
+
+
+
          // file_type directory_type {file_type::DIRECTORY_TYPE};
          // inode* new_inode = new inode(directory_type);
          // inode_ptr new_inode_ptr (new_inode);
@@ -252,13 +286,14 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
          cout << "mkdir(): .. inserting at " << new_inode_ptr << endl;
          new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", new_inode_ptr) );
 
-         return new_inode_ptr;
+         return new_inode;
       } 
       else if (dirents.find(dirname) != dirents.end()) {
          throw base_file_error();
       } 
       else {
          // Create new inode of directory type
+
          // file_type directory_type {1};
          // inode* new_inode = new inode(directory_type);
          // inode_ptr new_inode_ptr (new_inode);
@@ -286,7 +321,33 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
 
 inode_ptr directory::mkfile (const string& filename) {
    DEBUGF ('i', filename);
-   return nullptr;
+   //create an inode with plain_type, for files
+   try{
+         //does file name already exist?
+         if(dirents.find(filename)==dirents.end()){
+            throw base_file_error();
+         }
+         else{
+            //create new file
+            //slap it onto dirents then
+            
+            inode_ptr new_inode = make_shared<inode>(file_type::PLAIN_TYPE);
+            dirents.insert( pair<string, inode_ptr> (filename, new_inode) );
+
+            return new_inode;
+         }
+      }
+   catch (base_file_error&){
+      //write out the error
+      cout << "file error: " << filename << " already exists";
+      cout <<endl;
+      return nullptr;
+   }
+   
+   //call the inode constructor
+      //the string being passed
+   //append filepath to contents
+   //append that to the map
 }
 
 inode_ptr directory::get_directory_inode (const string& dirname) {
@@ -304,6 +365,22 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    }
 }
 
+
+inode_ptr directory::get_file_inode (const inode_state& state, const string& filename) {
+   DEBUGF ('i', filename);
+   try {
+      cout << "get_file_inode(): passing " << filename << endl;
+      if (dirents.find(filename) == dirents.end()) {
+         throw base_file_error();
+      }
+      return dirents[filename];
+   } catch (base_file_error&) {
+      cout << "file error: " << filename << " does not exist";
+      cout << endl;
+      return nullptr;
+   }
+
 map<string,inode_ptr>& directory::get_dirents (void) {
    return dirents;
+
 }

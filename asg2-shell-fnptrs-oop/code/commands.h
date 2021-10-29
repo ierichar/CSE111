@@ -28,6 +28,7 @@ class command_error: public runtime_error {
 void fn_cat    (inode_state& state, const wordvec& words);
 void fn_cd     (inode_state& state, const wordvec& words);
 void fn_echo   (inode_state& state, const wordvec& words);
+void fn_pound  (inode_state& state, const wordvec& words);
 void fn_exit   (inode_state& state, const wordvec& words);
 void fn_ls     (inode_state& state, const wordvec& words);
 void fn_lsr    (inode_state& state, const wordvec& words);
