@@ -22,8 +22,6 @@ class plain_file;
 class directory;
 using inode_ptr = shared_ptr<inode>;
 using base_file_ptr = shared_ptr<base_file>;
-using plain_file_ptr = shared_ptr<plain_file>;
-using directory_ptr = shared_ptr<directory>;
 ostream& operator<< (ostream&, file_type);
 
 
@@ -50,7 +48,7 @@ class inode_state {
       // Accessors
       inode_ptr get_root(void) const;
       inode_ptr get_cwd(void) const;
-      string get_pathname(void) const;
+      string pathname_to_string(void) const;
       // Mutators
       void set_cwd(const inode_ptr);
       void go_to_root(void);
@@ -92,8 +90,6 @@ class inode {
       void set_inode_nr(const size_t);
       void set_next_inode_nr(const size_t);
       void set_contents(const base_file_ptr);
-      void increment_nr();
-      void decrement_nr();
 };
 
 

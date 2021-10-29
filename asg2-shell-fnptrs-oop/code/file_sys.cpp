@@ -52,6 +52,9 @@ inode_state::inode_state() {
    this->cwd = root_inode_ptr;  // .
    this->prompt_ = prompt();
    this->pathname.push_back("/");
+
+   cout << "next_inode_nr" << this->root->next_inode_nr << endl;
+   cout << "inode_nr: " << this->root->inode_nr << endl;
 }
 
 const string& inode_state::prompt() const { return prompt_; }
@@ -66,7 +69,7 @@ inode_ptr inode_state::get_cwd() const {
    return cwd;
 }
 
-string inode_state::get_pathname() const {
+string inode_state::pathname_to_string() const {
    DEBUGF ('i', "pathname = " << pathname);
    string filepath = "";
    for (size_t i = 0; i < pathname.size(); i++) {
@@ -160,24 +163,6 @@ void inode::set_contents(const base_file_ptr contents_) {
    this->contents = contents_;
 }
 
-void inode::increment_nr() {
-   size_t temp = next_inode_nr;
-   inode_nr = temp;
-   next_inode_nr++;
-}
-
-void inode::decrement_nr() {
-   try {
-      if (inode_nr == 1) {
-         throw inode_error();
-      }
-      next_inode_nr--;
-      inode_nr--;
-   } catch (inode_error&) {
-      cout << "directory error: trying to go beyond root" << endl;
-   }
-}
-
 
 file_error::file_error (const string& what):
             runtime_error (what) {
@@ -265,7 +250,10 @@ void directory::remove (const string& filename) {
 inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
    DEBUGF ('i', dirname);
    try {
-      // Checks if directory already exists
+      if (dirname == "." || dirname == "..") {
+         throw base_file_error();
+      }
+      // Checks if directory does not exist and is root directory
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
          // Create new inode of directory type
 
@@ -286,7 +274,7 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
          cout << "mkdir(): .. inserting at " << new_inode_ptr << endl;
          new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", new_inode_ptr) );
 
-         return new_inode;
+         return new_inode_ptr;
       } 
       else if (dirents.find(dirname) != dirents.end()) {
          throw base_file_error();
@@ -354,7 +342,8 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    DEBUGF ('i', dirname);
    try {
       cout << "get_directory_inode(): passing " << dirname << endl;
-      if (dirents.find(dirname) == dirents.end()) {
+      print_dirents();
+      if (dirents.find(dirname) == dirents.end() && dirents.find(dirname + "/") == dirents.end()) {
          throw base_file_error();
       }
       return dirents[dirname];
