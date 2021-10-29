@@ -61,16 +61,16 @@ void fn_cd (inode_state& state, const wordvec& words) {
    if (words[1] == "/") {
       state.go_to_root();
       state.set_cwd(state.get_root());
-      cout << state.get_pathname() << endl;
+      cout << state.pathname_to_string() << endl;
    } else if (words[1] == ".") {
-      cout << state.get_pathname() << endl;
+      cout << state.pathname_to_string() << endl;
    } else if (words[1] == "..") {
       // need to also include a map search for parent directory
       if (state.get_cwd() != state.get_root()) {
          state.pop_filepath();
       }
       state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(".."));
-      cout << state.get_pathname() << endl;
+      cout << state.pathname_to_string() << endl;
    } else {
       // cd [filepath]
       // requires searching from root to current path
@@ -144,10 +144,14 @@ void fn_make (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
    
-   const string& full_document_filepath = "" + state.get_pathname() + words[1];
-   state.get_cwd()->get_contents()->mkfile(full_document_filepath); //calls mkfile with state pathname
+   // const string& full_document_filepath = "" + state.pathname_to_string() + words[1];
+   state.get_cwd()->get_contents()->mkfile(words[1]); //calls mkfile with state pathname
    //use writefile to write into the file state->contents
-   state.get_cwd()->get_contents()->writefile(state, words);
+   // create a newdata wordvec ignoring the first 2 elements
+   wordvec newdata = words;
+   newdata.erase(newdata.begin(), newdata.begin() + 2);
+
+   state.get_cwd()->get_contents()->writefile(state, newdata);
    //name plain file
    //get contents of words and put it in file
    //connect it to a node
@@ -169,9 +173,11 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
    new_inode_ptr = state.get_cwd()->get_contents()->mkdir(state, words[1]);
    
    // Insert new_inode_ptr to current directory's map
+   size_t new_nr = state.get_cwd()->get_next_inode() + 1;
+   new_inode_ptr->set_inode_nr(state.get_cwd()->get_next_inode());
+   new_inode_ptr->set_next_inode_nr(new_nr);
    state.set_cwd(new_inode_ptr);
    state.add_filepath(words[1]);
-   new_inode_ptr->increment_nr();
    cout << state << endl;
 }
 

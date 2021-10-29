@@ -45,8 +45,8 @@ inode_state::inode_state() {
    inode_ptr root_inode_ptr = virtual_inode_ptr->contents->mkdir(*this, "/");
 
    // Insert inode directory
-   root_inode_ptr->inode_nr = root_inode_ptr->next_inode_nr;
-   root_inode_ptr->next_inode_nr++;
+   // root_inode_ptr->inode_nr = root_inode_ptr->next_inode_nr;
+   // root_inode_ptr->next_inode_nr;
    // Initialize inode_state
    this->root = root_inode_ptr; // ..
    this->cwd = root_inode_ptr;  // .
@@ -227,13 +227,15 @@ void plain_file::writefile (const inode_state& state, const wordvec& words) {
    // }
    // dirents.find(words[1]).close();
 
-     state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents(); //open
-      int i = 2;
-   while (words[i]!= ""){
-     state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //<< words[i];
-      i++;
-   }
-   state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //close();
+   // state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents(); //open
+
+   state.get_cwd()->get_contents()->data = words;
+   // int i = 2;
+   // while (words[i]!= ""){
+   //   state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //<< words[i];
+   //    i++;
+   // }
+   // state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //close();
 
 }
 
@@ -255,13 +257,6 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
       }
       // Checks if directory does not exist and is root directory
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
-         // Create new inode of directory type
-
-
-
-         // file_type directory_type {file_type::DIRECTORY_TYPE};
-         // inode* new_inode = new inode(directory_type);
-         // inode_ptr new_inode_ptr (new_inode);
 
          // IMPORTANT SYNTAX 10-28-2021
          inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
@@ -309,10 +304,11 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
 
 inode_ptr directory::mkfile (const string& filename) {
    DEBUGF ('i', filename);
+   cout << "mkfile() current filename is " << filename << endl;
    //create an inode with plain_type, for files
    try{
          //does file name already exist?
-         if(dirents.find(filename)==dirents.end()){
+         if(dirents.find(filename) != dirents.end()){
             throw base_file_error();
          }
          else{
@@ -342,7 +338,6 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    DEBUGF ('i', dirname);
    try {
       cout << "get_directory_inode(): passing " << dirname << endl;
-      print_dirents();
       if (dirents.find(dirname) == dirents.end() && dirents.find(dirname + "/") == dirents.end()) {
          throw base_file_error();
       }
@@ -353,7 +348,6 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
       return nullptr;
    }
 }
-
 
 inode_ptr directory::get_file_inode (const inode_state& state, const string& filename) {
    DEBUGF ('i', filename);
@@ -368,8 +362,8 @@ inode_ptr directory::get_file_inode (const inode_state& state, const string& fil
       cout << endl;
       return nullptr;
    }
+}
 
 map<string,inode_ptr>& directory::get_dirents (void) {
    return dirents;
-
 }
