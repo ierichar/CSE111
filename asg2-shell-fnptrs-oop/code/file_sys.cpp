@@ -39,32 +39,17 @@ ostream& operator<< (ostream& out, file_type type) {
 inode_state::inode_state() {
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
-   // initialize inode_state AND inode attributes
-   // INODE_STATE
-   // inode_ptr root = inode_state (initial inode state)
-   // inode_ptr cwd = root;
-   // string prompt_ = prompt()
 
-   // Initialize inode_ptr from inode
-   // base_file_ptr contents = 
-   //    (a directory of <string = "/", inode_ptr = itself)
-
-   // Create new node with directory_type
-   file_type directory_type {1};
-   inode* new_inode = new inode(directory_type);
-   inode_ptr new_inode_ptr (new_inode);
-   // Create new directory_ptr from directory named root "/"
-   directory* new_directory = new directory();
-   new_directory->mkdir("/");
-   directory_ptr new_directory_ptr (new_directory);
+   inode_ptr virtual_inode_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   virtual_inode_ptr->contents = make_shared<directory>();
+   inode_ptr root_inode_ptr = virtual_inode_ptr->contents->mkdir(*this, "/");
 
    // Insert inode directory
-   new_inode->contents = new_directory_ptr;
-   new_inode->inode_nr = new_inode->next_inode_nr;
-   new_inode->next_inode_nr++;
+   root_inode_ptr->inode_nr = root_inode_ptr->next_inode_nr;
+   root_inode_ptr->next_inode_nr++;
    // Initialize inode_state
-   this->root = new_inode_ptr; // ..
-   this->cwd = new_inode_ptr;  // .
+   this->root = root_inode_ptr; // ..
+   this->cwd = root_inode_ptr;  // .
    this->prompt_ = prompt();
    this->pathname.push_back("/");
 }
@@ -107,16 +92,18 @@ void inode_state::go_to_root(void) {
    }
 }
 
-string inode_state::subtract_filepath(void) {
-   // Return new pathname after pop_back
-   pathname.pop_back();
-   return this->get_pathname();
+void inode_state::add_filepath(const string& recent_directory) {
+   // push onto back of filepath the most recent directory
+   pathname.push_back(recent_directory);
 }
 
-void inode_state::add_filepath(const string& new_directory) {
-   // Has precondition that new directory is valid
-   pathname.push_back(new_directory);
+string inode_state::pop_filepath(void) {
+   // pop back pathname by one and return popped string
+   string last_directory = pathname[pathname.size() - 1];
+   pathname.pop_back();
+   return last_directory;
 }
+
 
 ostream& operator<< (ostream& out, const inode_state& state) {
    out << "inode_state: root = " << state.root
@@ -202,7 +189,7 @@ void base_file::remove (const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
-inode_ptr base_file::mkdir (const string&) {
+inode_ptr base_file::mkdir (inode_state&, const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -211,6 +198,10 @@ inode_ptr base_file::mkfile (const string&) {
 }
 
 inode_ptr base_file::get_directory_inode (const string&) {
+   throw file_error ("is a " + error_file_type());
+}
+
+map<string,inode_ptr>& base_file::get_dirents (void) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -240,18 +231,26 @@ void directory::remove (const string& filename) {
    DEBUGF ('i', filename);
 }
 
-inode_ptr directory::mkdir (const string& dirname) {
+inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
    DEBUGF ('i', dirname);
    try {
       // Checks if directory already exists
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
          // Create new inode of directory type
-         file_type directory_type {1};
-         inode* new_inode = new inode(directory_type);
-         inode_ptr new_inode_ptr (new_inode);
+         // file_type directory_type {file_type::DIRECTORY_TYPE};
+         // inode* new_inode = new inode(directory_type);
+         // inode_ptr new_inode_ptr (new_inode);
+
+         // IMPORTANT SYNTAX 10-28-2021
+         inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
 
          // Insert root directory, "." and ".."
+         cout << "mkdir(): " << dirname << " inserting at " << new_inode_ptr << endl;
          dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
+         cout << "mkdir(): . inserting at " << new_inode_ptr << endl;
+         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>(".", new_inode_ptr) );
+         cout << "mkdir(): .. inserting at " << new_inode_ptr << endl;
+         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", new_inode_ptr) );
 
          return new_inode_ptr;
       } 
@@ -260,13 +259,21 @@ inode_ptr directory::mkdir (const string& dirname) {
       } 
       else {
          // Create new inode of directory type
-         file_type directory_type {1};
-         inode* new_inode = new inode(directory_type);
-         inode_ptr new_inode_ptr (new_inode);
+         // file_type directory_type {1};
+         // inode* new_inode = new inode(directory_type);
+         // inode_ptr new_inode_ptr (new_inode);
+         // new_inode_ptr->contents = make_shared<directory>();
+
+         inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
 
          // Insert inode directory to send to fn_mkdir
+         cout << "mkdir(): " << dirname << " inserting at " << new_inode_ptr << endl;
          dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
-         
+         cout << "mkdir(): . inserting at " << new_inode_ptr << endl;
+         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>(".", new_inode_ptr) );
+         cout << "mkdir(): .. inserting at " << state.get_cwd() << endl;
+         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", state.get_cwd()) );
+
          return new_inode_ptr;
       }
    }
@@ -295,4 +302,8 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
       cout << endl;
       return nullptr;
    }
+}
+
+map<string,inode_ptr>& directory::get_dirents (void) {
+   return dirents;
 }
