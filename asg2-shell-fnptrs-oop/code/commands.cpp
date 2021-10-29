@@ -3,9 +3,11 @@
 #include "commands.h"
 #include "debug.h"
 
+
 command_hash cmd_hash {
    {"cat"   , fn_cat   },
    {"cd"    , fn_cd    },
+   {"#"     , fn_pound },
    {"echo"  , fn_echo  },
    {"exit"  , fn_exit  },
    {"ls"    , fn_ls    },
@@ -41,6 +43,11 @@ int exit_status_message() {
 }
 
 void fn_cat (inode_state& state, const wordvec& words) {
+   DEBUGF ('c', state);
+   DEBUGF ('c', words);
+}
+
+void fn_pound (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
 }
@@ -136,6 +143,16 @@ void fn_lsr (inode_state& state, const wordvec& words) {
 void fn_make (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   
+   const string& full_document_filepath = "" + state.get_pathname() + words[1];
+   state.get_cwd()->get_contents()->mkfile(full_document_filepath); //calls mkfile with state pathname
+   //use writefile to write into the file state->contents
+   state.get_cwd()->get_contents()->writefile(state, words);
+   //name plain file
+   //get contents of words and put it in file
+   //connect it to a node
+   //close the file
+
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words) {
@@ -161,6 +178,19 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
 void fn_prompt (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   cout << state;
+   cout << "bruh";
+   //cout << endl;
+   cout << "bruh x 23";
+   cout << words [1];
+   int i = 1;
+   state.set_prompt_("");
+   while (words[i] != ""){
+      state.set_prompt_(words[i]);
+      state.set_prompt_(" ");
+      i++;
+   }
+
 }
 
 void fn_pwd (inode_state& state, const wordvec& words) {
