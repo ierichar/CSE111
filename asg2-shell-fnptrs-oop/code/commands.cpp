@@ -45,6 +45,14 @@ int exit_status_message() {
 void fn_cat (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+
+   wordvec newdata = words;
+   newdata.erase(newdata.begin(), newdata.begin() + 1);
+   size_t i = 0;
+   while (i < words.size()-1){
+      state.get_cwd()->get_contents()->get_file_inode(state, words[i])->get_contents()->readfile();
+      i++;
+   }
 }
 
 void fn_pound (inode_state& state, const wordvec& words) {
@@ -144,19 +152,16 @@ void fn_make (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
    
-   // const string& full_document_filepath = "" + state.pathname_to_string() + words[1];
-   state.get_cwd()->get_contents()->mkfile(words[1]); //calls mkfile with state pathname
-   //use writefile to write into the file state->contents
+   state.get_cwd()->get_contents()->mkfile(state, words[1]); 
+   //calls mkfile with state pathname
+
    // create a newdata wordvec ignoring the first 2 elements
    wordvec newdata = words;
-   newdata.erase(newdata.begin(), newdata.begin() + 2);
+   newdata.erase(newdata.begin(), newdata.begin() + 1);
 
-   state.get_cwd()->get_contents()->writefile(state, newdata);
-   //name plain file
-   //get contents of words and put it in file
-   //connect it to a node
-   //close the file
-
+   //use writefile to write into the file state->contents
+   
+   state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents()->writefile(newdata);
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words) {
@@ -184,18 +189,17 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
 void fn_prompt (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   cout << state;
-   cout << "bruh";
-   //cout << endl;
-   cout << "bruh x 23";
-   cout << words [1];
-   int i = 1;
-   state.set_prompt_("");
-   while (words[i] != ""){
-      state.set_prompt_(words[i]);
-      state.set_prompt_(" ");
+
+   wordvec newdata = words;
+   newdata.erase(newdata.begin(), newdata.begin() + 1);
+   string newPrompt = "";
+   size_t i = 0;
+   while (i < words.size()-1){
+      newPrompt += newdata[i];
+      newPrompt += " ";
       i++;
    }
+   state.set_prompt_(newPrompt);
 
 }
 
