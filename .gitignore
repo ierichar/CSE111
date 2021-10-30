@@ -8,3 +8,10 @@ asg1-dc-bigint/code/ubigint.o
 asg1-dc-bigint/code/util.o
 asg1-dc-bigint/code/ydc
 asg1-dc-bigint/code/ydc
+asg2-shell-fnptrs-oop/code/commands.o
+asg2-shell-fnptrs-oop/code/debug.o
+asg2-shell-fnptrs-oop/code/file_sys.o
+asg2-shell-fnptrs-oop/code/main.o
+asg2-shell-fnptrs-oop/code/Makefile.dep
+asg2-shell-fnptrs-oop/code/util.o
+asg2-shell-fnptrs-oop/code/yshell
