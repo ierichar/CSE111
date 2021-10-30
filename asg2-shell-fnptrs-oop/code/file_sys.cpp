@@ -88,9 +88,8 @@ void inode_state::set_cwd(const inode_ptr cwd_) {
    this->cwd = cwd_;
 }
 
-void inode_state::set_prompt_(const string& word){
-   this->prompt_ += word;
-   //word[3] = "null";
+void inode_state::set_prompt_(const string word){
+   this->prompt_ = word;
 }
 
 
@@ -172,7 +171,8 @@ const wordvec& base_file::readfile() const {
    throw file_error ("is a " + error_file_type());
 }
 
-void base_file::writefile (const inode_state&, const wordvec&) {
+
+void base_file::writefile (const wordvec&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -184,7 +184,7 @@ inode_ptr base_file::mkdir (inode_state&, const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
-inode_ptr base_file::mkfile (const string&) {
+inode_ptr base_file::mkfile (inode_state&, const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -210,32 +210,19 @@ size_t plain_file::size() const {
 
 const wordvec& plain_file::readfile() const {
    DEBUGF ('i', data);
+   cout << this->data;
    return data;
 }
 
-void plain_file::writefile (const inode_state& state, const wordvec& words) {
-   // DEBUGF ('i', words);
-   //    //find the file first
-   // //dirents.find(words[1]);
-   // //open the file
-   // this->inode_state.get_cwd()->get_contents->dirents.find(words[1]).open("");
-   // //write into the file first
-   // int i = 2;
-   // while (words[2]!= ""){
-   //    dirents.find(words[1]) << words[i];
-   //    i++;
-   // }
-   // dirents.find(words[1]).close();
+void plain_file::writefile (const wordvec& words) {
+    DEBUGF ('i', words);
 
-   // state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents(); //open
-
-   state.get_cwd()->get_contents()->data = words;
-   // int i = 2;
-   // while (words[i]!= ""){
-   //   state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //<< words[i];
-   //    i++;
-   // }
-   // state.get_cwd()->get_contents()->get_file_inode(state, words[1]); //close();
+   //inode_ptr new_inode_ptr = state.get_cwd()->get_contents()->get_file_inode(state, words[0]);
+   //wordvec newdata = words;
+   //newdata.erase(newdata.begin(), newdata.begin() + 1);
+   //new_inode_ptr->get_contents()->this.data = newdata;
+   this->data = words;
+   //get dirents[filename]
 
 }
 
@@ -302,36 +289,25 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
    }
 }
 
-inode_ptr directory::mkfile (const string& filename) {
+inode_ptr directory::mkfile (inode_state& state, const string& filename) {
    DEBUGF ('i', filename);
-   cout << "mkfile() current filename is " << filename << endl;
+   //cout << "mkfile() current filename is " << filename << endl;
    //create an inode with plain_type, for files
-   try{
+
          //does file name already exist?
          if(dirents.find(filename) != dirents.end()){
-            throw base_file_error();
+            inode_ptr existing_inode = get_file_inode(state, filename);
+            return existing_inode;
          }
          else{
             //create new file
             //slap it onto dirents then
             
-            inode_ptr new_inode = make_shared<inode>(file_type::PLAIN_TYPE);
+            inode_ptr new_inode { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+            new_inode->contents = make_shared<plain_file>();
             dirents.insert( pair<string, inode_ptr> (filename, new_inode) );
-
             return new_inode;
          }
-      }
-   catch (base_file_error&){
-      //write out the error
-      cout << "file error: " << filename << " already exists";
-      cout <<endl;
-      return nullptr;
-   }
-   
-   //call the inode constructor
-      //the string being passed
-   //append filepath to contents
-   //append that to the map
 }
 
 inode_ptr directory::get_directory_inode (const string& dirname) {
@@ -352,7 +328,7 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
 inode_ptr directory::get_file_inode (const inode_state& state, const string& filename) {
    DEBUGF ('i', filename);
    try {
-      cout << "get_file_inode(): passing " << filename << endl;
+      //cout << "get_file_inode(): passing " << filename << endl;
       if (dirents.find(filename) == dirents.end()) {
          throw base_file_error();
       }
