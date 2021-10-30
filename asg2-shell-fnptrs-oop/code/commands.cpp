@@ -73,47 +73,29 @@ void fn_cd (inode_state& state, const wordvec& words) {
       cout << state.pathname_to_string() << endl;
    } else {
       // cd [filepath]
-      // requires searching from root to current path
-      // the input is looking for
-      // Suggest: using map in directory
-      // maybe create a search_directory() function
       inode_ptr placeholder = state.get_cwd();
 
-      state.set_cwd(state.get_root());
       wordvec full_filepath = split(words[1], "/");
+      cout << "cd full_filepath is " << full_filepath << endl;
       string directory_name;
       bool found = true;
       for (auto i = full_filepath.begin(); i != full_filepath.end() && found; ++i) {
+         directory_name = *i;
          cout << "cd search: " << directory_name << endl;
+         cout << "cwd is: " << state.get_cwd() << endl;
          if (state.get_cwd()->get_contents()->get_directory_inode(directory_name) == nullptr) {
             found = false;
          } else {
             state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(directory_name));
+            state.add_filepath(directory_name);
          }
       }
-
-      // while (full_filepath.size() > 0 && found) {
-      //    directory_name = full_filepath.front();
-      //    if (directory_name == "/") {
-      //       directory_name = full_filepath.next();
-      //    }
-      //    cout << "cd search: " << directory_name << endl;
-      //    if (state.get_cwd()->get_contents()->get_dirents()->get_directory_inode(directory_name) == nullptr) {
-      //       found = false;
-      //    } else {
-      //       state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(directory_name));
-      //    }
-      //    full_filepath.erase(full_filepath.begin()+1);
-      // }
 
       if (!found) {
          state.set_cwd(placeholder);
          cout << "cannot find directory" << endl;
-      } else {
-         full_filepath = split(words[1], "/");
-         directory_name = full_filepath[full_filepath.size() - 1];
-         state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(directory_name));
       }
+      cout << "current state is: " << state.get_cwd() << endl;
    }
 }
 
@@ -133,11 +115,29 @@ void fn_exit (inode_state& state, const wordvec& words) {
 void fn_ls (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+
+   if (words.size() == 1) {
+      cout << state.pathname_to_string();
+      if (state.get_cwd() != state.get_root()) {
+         cout << "/";
+      }
+      cout << ":" << endl;
+      state.get_cwd()->get_contents()->print_directory_ls();
+   } else {
+      inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
+      cout << words[1];
+      if (placeholder != state.get_root()) {
+         cout << "/";
+      }
+      cout << ":" << endl;
+      placeholder->get_contents()->print_directory_ls();
+   }
 }
 
 void fn_lsr (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   state.get_cwd()->get_contents()->print_directory_lsr(state);
 }
 
 void fn_make (inode_state& state, const wordvec& words) {
@@ -176,8 +176,8 @@ void fn_mkdir (inode_state& state, const wordvec& words) {
    size_t new_nr = state.get_cwd()->get_next_inode() + 1;
    new_inode_ptr->set_inode_nr(state.get_cwd()->get_next_inode());
    new_inode_ptr->set_next_inode_nr(new_nr);
-   state.set_cwd(new_inode_ptr);
-   state.add_filepath(words[1]);
+   // state.set_cwd(new_inode_ptr);
+   // state.add_filepath(words[1]);
    cout << state << endl;
 }
 
@@ -196,7 +196,6 @@ void fn_prompt (inode_state& state, const wordvec& words) {
       state.set_prompt_(" ");
       i++;
    }
-
 }
 
 void fn_pwd (inode_state& state, const wordvec& words) {
