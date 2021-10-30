@@ -123,29 +123,52 @@ void fn_exit (inode_state& state, const wordvec& words) {
 void fn_ls (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-
-   if (words.size() == 1) {
-      cout << state.pathname_to_string();
-      if (state.get_cwd() != state.get_root()) {
-         cout << "/";
+   try {
+      if (words.size() == 1) {
+         cout << state.pathname_to_string();
+         if (state.get_cwd() != state.get_root()) {
+            cout << "/";
+         }
+         cout << ":" << endl;
+         state.get_cwd()->get_contents()->print_directory_ls();
+      } else {
+         inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
+         if (placeholder == nullptr) {
+            throw runtime_error(words[1]);
+         }
+         cout << words[1];
+         if (placeholder != state.get_root()) {
+            cout << "/";
+         }
+         cout << ":" << endl;
+         placeholder->get_contents()->print_directory_ls();
       }
-      cout << ":" << endl;
-      state.get_cwd()->get_contents()->print_directory_ls();
-   } else {
-      inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
-      cout << words[1];
-      if (placeholder != state.get_root()) {
-         cout << "/";
-      }
-      cout << ":" << endl;
-      placeholder->get_contents()->print_directory_ls();
+   } catch (runtime_error& error) {
+      cout << "ls error: " << error.what() << " path not valid" << endl;
    }
 }
 
 void fn_lsr (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   state.get_cwd()->get_contents()->print_directory_lsr(state);
+   try {
+      if (words.size() == 1) {
+         state.get_cwd()->get_contents()->print_directory_lsr();
+      } else {
+         inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
+         if (placeholder == nullptr) {
+            throw runtime_error(words[1]);
+         }
+         cout << words[1];
+         if (placeholder != state.get_root()) {
+            cout << "/";
+         }
+         cout << ":" << endl;
+         placeholder->get_contents()->print_directory_lsr();
+      }
+   } catch (runtime_error& error) {
+      cout << "lsr error: " << error.what() << " path not valid" << endl;
+   }
 }
 
 void fn_make (inode_state& state, const wordvec& words) {

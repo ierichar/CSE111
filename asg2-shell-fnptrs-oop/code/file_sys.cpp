@@ -207,7 +207,11 @@ void base_file::print_directory_ls(void) {
    throw file_error ("is a " + error_file_type());
 }
 
-void base_file::print_directory_lsr(inode_state&) {
+void base_file::print_directory_lsr(void) {
+   throw file_error ("is a " + error_file_type());
+}
+
+bool base_file::isDirectory(void) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -233,6 +237,11 @@ void plain_file::writefile (const wordvec& words) {
    //new_inode_ptr->get_contents()->this.data = newdata;
    this->data = words;
    //get dirents[filename]
+}
+
+bool plain_file::isDirectory(void) {
+   // :(
+   return false;
 }
 
 size_t directory::size() const {
@@ -364,20 +373,30 @@ void directory::print_directory_ls(void) {
    }
 }
 
-void directory::print_directory_lsr(inode_state& state) {
+void directory::print_directory_lsr(void) {
    // pre-order print directory tree nodes
    this->print_directory_ls();
+
+   // create testcase of type make_shared<directory> to compare contents
+   // of arbitrary inode_ptrs in the directory map
    base_file_ptr testcase = make_shared<directory>();
+
    for (auto i = dirents.begin(); i != dirents.end(); ++i) {
-      cout << "traversing current directory... " << endl;
-      cout << typeid(i->second->get_contents()).name() << endl;
-      cout << typeid(*this).name() << endl;
-      // NEED TO CHECK FOR DIRECTORY TYPE
-      if (typeid(i->second) == typeid(*this) 
+      if (i->second->get_contents()->isDirectory() 
             && i->first != "." && i->first != "..") {
-         // recursively access subdirectories
-         cout << "lsr depth into " << i->first << endl;
-         i->second->get_contents()->print_directory_lsr(state);
+         // recursively access subdirectories and print them out
+         // in pre-order
+         cout << i->first;
+         if (i->first != "/") {
+            cout << "/";
+         } 
+         cout << ":" << endl;
+         i->second->get_contents()->print_directory_lsr();
       }
    }
+}
+
+bool directory::isDirectory(void) {
+   // :)
+   return true;
 }
