@@ -3,6 +3,8 @@
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
+#include <iomanip>
+#include <typeinfo>
 
 using namespace std;
 
@@ -201,6 +203,14 @@ map<string,inode_ptr>& base_file::get_dirents (void) {
    throw file_error ("is a " + error_file_type());
 }
 
+void base_file::print_directory_ls(void) {
+   throw file_error ("is a " + error_file_type());
+}
+
+void base_file::print_directory_lsr(inode_state&) {
+   throw file_error ("is a " + error_file_type());
+}
+
 
 size_t plain_file::size() const {
    size_t size {0};
@@ -223,7 +233,6 @@ void plain_file::writefile (const wordvec& words) {
    //new_inode_ptr->get_contents()->this.data = newdata;
    this->data = words;
    //get dirents[filename]
-
 }
 
 size_t directory::size() const {
@@ -342,4 +351,33 @@ inode_ptr directory::get_file_inode (const inode_state& state, const string& fil
 
 map<string,inode_ptr>& directory::get_dirents (void) {
    return dirents;
+}
+
+void directory::print_directory_ls(void) {
+   for (auto i = dirents.begin(); i != dirents.end(); ++i) {
+      // inode_nr
+      cout << right << setw(6) << i->second->get_inode_nr();
+      // size()
+      cout << right << setw(6) << i->second->get_contents()->size();
+      // filename + '/'
+      cout << left << " " << i->first << left << '/' << endl;
+   }
+}
+
+void directory::print_directory_lsr(inode_state& state) {
+   // pre-order print directory tree nodes
+   this->print_directory_ls();
+   base_file_ptr testcase = make_shared<directory>();
+   for (auto i = dirents.begin(); i != dirents.end(); ++i) {
+      cout << "traversing current directory... " << endl;
+      cout << typeid(i->second->get_contents()).name() << endl;
+      cout << typeid(*this).name() << endl;
+      // NEED TO CHECK FOR DIRECTORY TYPE
+      if (typeid(i->second) == typeid(*this) 
+            && i->first != "." && i->first != "..") {
+         // recursively access subdirectories
+         cout << "lsr depth into " << i->first << endl;
+         i->second->get_contents()->print_directory_lsr(state);
+      }
+   }
 }
