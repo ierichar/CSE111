@@ -248,6 +248,45 @@ size_t directory::size() const {
 
 void directory::remove (const string& filename) {
    DEBUGF ('i', filename);
+   try {
+      if (dirents.find(filename) == dirents.end()) {
+         throw base_file_error();
+      }
+      // Set node at . to null and delete
+      if (filename == ".") {
+         dirents["."] = nullptr;
+         dirents.erase(".");
+      } 
+      // Set node at .. to null and delete
+      else if (filename == "..") {
+         dirents[".."] = nullptr;
+         dirents.erase("..");
+      }
+      // If directory remove directory
+      else if (dirents[filename]->get_contents()->isDirectory()) {
+         cout << "check 1 reached" << endl;
+         // Check if only . and .. are in directory
+         if (dirents[filename]->get_contents()->size() == 2) {
+            cout << "size check reached" << endl;
+            // Call remove on .
+            dirents[filename]->get_contents()->remove(".");
+            // Call remove on ..
+            dirents[filename]->get_contents()->remove("..");
+            // Set target directory node to null and delete
+            dirents[filename] = nullptr;
+            dirents.erase(filename);
+         } else {
+            throw base_file_error();
+         }
+      } 
+      // Else remove file
+      else {
+         dirents[filename] = nullptr;
+         dirents.erase(filename);
+      }
+   } catch (base_file_error&) {
+      cout << "directory error: " << endl;
+   }
 }
 
 inode_ptr directory::mkdir (inode_state& state, 

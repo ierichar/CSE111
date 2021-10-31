@@ -322,14 +322,48 @@ void fn_rm (inode_state& state, const wordvec& words) {
    //    True: Check if  is empty (only contains . and ..)
    //       True: Delete directory
    //    False: Delete file
+   try {
+      // Case 1: rm
+      if (words.size() == 1) {
+         throw runtime_error("no file or directory specified");
+      }
+      // Case 2: rm /
+      if (words.size() == 2 && words[1] == "/") {
+         throw runtime_error("cannot remove root");
+      }
+      // Case 3: rm [filepath]
+      inode_ptr placeholder = state.get_cwd();
+      wordvec full_filepath = split(words[1], "/");
+      string directory_name;
+      bool found = true;
+
+      // Loop through subdirectories to find beginning for lsr
+      // Stops before final directory check
+      for (auto i = full_filepath.begin();
+         i != full_filepath.end()-1 && found; ++i) {
+
+         directory_name = *i;
+         if (placeholder->get_contents()->\
+               get_directory_inode(directory_name) == nullptr) {
+            found = false;
+         } else {
+            placeholder = placeholder->get_contents()->\
+               get_directory_inode(directory_name);
+         }
+      }
+      
+      // Send request to delete from previous directory
+      placeholder->get_contents()->remove(directory_name);
+
+   } catch (command_error& error) {
+      cout << "fn_rm error: " << error.what() << endl;
+   }
 }
 
 void fn_rmr (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   // 1. Check if searched base file exists
-   // 2. Check if directory
-   //    True: Check if  is empty (only contains . and ..)
-   //       True: Delete directory
-   //    False: Delete file
+   // 1. Check if searched base file is directory
+   // 2. Remove everything in all subdirectories, then lastly
+   //    the origin directory
 }
