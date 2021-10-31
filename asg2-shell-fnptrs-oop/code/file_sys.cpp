@@ -13,7 +13,7 @@ using namespace std;
 #include "debug.h"
 #include "file_sys.h"
 
-size_t inode::next_inode_nr {1};
+size_t inode::next_inode_nr {0};
 
 // inode exceptions
 class inode_error : public exception {};
@@ -56,7 +56,9 @@ inode_state::inode_state() {
    this->prompt_ = prompt();
    this->pathname.push_back("/");
 
-   cout << "next_inode_nr" << this->root->next_inode_nr << endl;
+   cout << "root is: " << this->root << endl;
+   cout << "root contents is :" << this->root->contents << endl;
+   cout << "next_inode_nr " << this->root->next_inode_nr << endl;
    cout << "inode_nr: " << this->root->inode_nr << endl;
 }
 
@@ -187,7 +189,7 @@ inode_ptr base_file::mkdir (inode_state&, const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
-inode_ptr base_file::mkfile (inode_state&, const string&) {
+inode_ptr base_file::mkfile (const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -196,8 +198,7 @@ inode_ptr base_file::get_directory_inode (const string&) {
 }
 
 
-inode_ptr base_file::get_file_inode (const inode_state&, 
-   const string&) {
+inode_ptr base_file::get_file_inode (const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -228,16 +229,16 @@ size_t plain_file::size() const {
       size ++; //add one for space
       f++;
    }
-   size --; //subtract an extra one.
+   if (size > 0) {
+      size --; //subtract an extra one.
+   }
    //cout << size;
    return size;
 }
 
 const wordvec& plain_file::readfile() const {
    DEBUGF ('i', data);
-   cout << this->data;
-   //this->size();
-   cout << " ";
+   cout << this->data << endl;
    return data;
 }
 
@@ -357,26 +358,29 @@ inode_ptr directory::mkdir (inode_state& state,
    }
 }
 
-inode_ptr directory::mkfile (inode_state& state, 
-   const string& filename) {
+inode_ptr directory::mkfile (const string& filename) {
    DEBUGF ('i', filename);
    // Create an inode with plain_type, for files
-
+      if (this->isDirectory()) {
          // Does file name already exist?
          if(dirents.find(filename) != dirents.end()){
-            inode_ptr existing_inode = get_file_inode(state, filename);
-            return existing_inode;
+            return dirents[filename];
          }
          else{
             // Create new file
             // Slap it onto dirents then
             inode_ptr new_inode 
-               { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+               { make_shared<inode>(file_type::PLAIN_TYPE) };
             new_inode->contents = make_shared<plain_file>();
             dirents.insert( 
                pair<string, inode_ptr> (filename, new_inode) );
             return new_inode;
          }
+      }
+      else {
+         cout << "cannot replace a directory" << endl;
+         return nullptr;
+      }
 }
 
 inode_ptr directory::get_directory_inode (const string& dirname) {
@@ -394,8 +398,7 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    }
 }
 
-inode_ptr directory::get_file_inode (const inode_state& state, 
-   const string& filename) {
+inode_ptr directory::get_file_inode (const string& filename) {
    DEBUGF ('i', filename);
    try {
       if (dirents.find(filename) == dirents.end()) {
@@ -420,7 +423,11 @@ void directory::print_directory_ls(void) {
       // size()
       cout << right << setw(6) << i->second->get_contents()->size();
       // filename + '/'
-      cout << left << " " << i->first << left << '/' << endl;
+      cout << left << " " << i->first << left;
+      if (i->second->get_contents()->isDirectory()) {
+         cout << "/";
+      }
+      cout << endl;
    }
 }
 
