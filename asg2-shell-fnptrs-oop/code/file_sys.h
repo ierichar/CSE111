@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: file_sys.h,v 1.9 2021-09-26 12:41:17-07 - - $
 
 #ifndef __INODE_H__
@@ -121,7 +123,8 @@ class base_file {
       virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void);
       virtual void print_directory_ls(void);
-      virtual void print_directory_lsr(inode_state& state);
+      virtual void print_directory_lsr(void);
+      virtual bool isDirectory(void);
 };
 
 // class plain_file -
@@ -144,6 +147,7 @@ class plain_file: public base_file {
       virtual size_t size() const override;
       virtual const wordvec& readfile() const override;
       virtual void writefile (const wordvec& newdata) override;
+      virtual bool isDirectory() override;
 };
 
 // class directory -
@@ -183,7 +187,8 @@ class directory: public base_file {
       virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void) override;
       virtual void print_directory_ls(void) override;
-      virtual void print_directory_lsr(inode_state& state) override;
+      virtual void print_directory_lsr(void) override;
+      virtual bool isDirectory(void) override;
 };
 
 #endif
