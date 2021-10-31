@@ -47,16 +47,55 @@ int exit_status_message() {
 void fn_cat (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   try {
+      size_t i = 1;
+      while (i < words.size()) {
+         // cat [/yellow/red/document] [/yellow/red/new_document]
+         // start with [/yellow/red/document]
+         inode_ptr temp;
+         wordvec i_directory_names = split(words[i], "/");
+         string directory_name = i_directory_names[0];
+         bool found = true;
 
-   wordvec newdata = words;
-   newdata.erase(newdata.begin(), newdata.begin() + 1);
-   size_t i = 1;
-   //right here, create a check function have it return something, see if file exists :D
-   while (i < words.size()){
-      state.get_cwd()->get_contents()->get_file_inode(state, words[i])->get_contents()->readfile();
-      i++;
+         // Check if filepath is from root or cwd
+         if (state.get_root()->get_contents()->get_directory_inode(words[1]) == nullptr) {
+            if (state.get_cwd()->get_contents()->get_directory_inode(words[1]) == nullptr) {
+               throw runtime_error(words[1]);
+            } else {
+               temp = state.get_cwd();
+            }
+         } else {
+            temp = state.get_root();
+         }
+
+         for (auto j = i_directory_names.begin(); 
+            j != i_directory_names.end() && found; ++j) {
+
+            directory_name = *j;
+            if (temp->get_contents()->get_directory_inode(directory_name) == nullptr) {
+               found = false;
+            } else {
+               temp = temp->get_contents()->get_directory_inode(directory_name);
+            }
+         }
+
+         if (!found) {
+            throw runtime_error(directory_name);
+         }
+         if (temp->get_contents()->isDirectory()) {
+            throw runtime_error(directory_name);
+         } else {
+            // Prints data to cout
+            temp->get_contents()->readfile();
+         }
+
+         // state.get_cwd()->get_contents()->get_file_inode(words[i])->
+         // get_contents()->readfile();
+         i++;
+      }
+   } catch (runtime_error& error) {
+      cout << "fn_cat error" << endl;
    }
-   cout << endl;
 }
 
 void fn_pound (inode_state& state, const wordvec& words) {
@@ -155,11 +194,20 @@ void fn_ls (inode_state& state, const wordvec& words) {
       }
       // Case 2: ls [filepath]
       else {
-          // Initialize search variables
-         inode_ptr placeholder = state.get_cwd();
+         // Initialize search variables
+         inode_ptr placeholder;
          wordvec full_filepath = split(words[1], "/");
-         string directory_name;
+         string directory_name = full_filepath[0];
          bool found = true;
+         if (state.get_root()->get_contents()->get_directory_inode(directory_name) == nullptr) {
+            if (state.get_cwd()->get_contents()->get_directory_inode(directory_name) == nullptr) {
+               throw runtime_error(directory_name);
+            } else {
+               placeholder = state.get_cwd();
+            }
+         } else {
+            placeholder = state.get_root();
+         }
 
          // Loop through subdirectories to find beginning for lsr
          for (auto i = full_filepath.begin();
@@ -260,15 +308,17 @@ void fn_make (inode_state& state, const wordvec& words) {
    DEBUGF ('c', words);
    
    // Calls mkfile with state pathname
-   state.get_cwd()->get_contents()->mkfile(state, words[1]); 
+   cout << "make() cwd: " << state.get_cwd() << endl;
+   cout << "make() cwd->contents " << state.get_cwd()->get_contents() << endl;
+   inode_ptr new_file = state.get_cwd()->get_contents()->mkfile(words[1]); 
 
    // Create a newdata wordvec ignoring the first 2 elements
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 2);
 
    // Use writefile to write into the file
-   state.get_cwd()->get_contents()->\
-   get_file_inode(state, words[1])->get_contents()->writefile(newdata);
+   new_file->get_contents()->writefile(newdata);
+   //state.get_cwd()->get_contents()->get_file_inode(words[1])->get_contents()->writefile(newdata);
    
 }
 
