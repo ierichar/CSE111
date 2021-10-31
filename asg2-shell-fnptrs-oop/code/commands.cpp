@@ -51,9 +51,9 @@ void fn_cat (inode_state& state, const wordvec& words) {
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 1);
    size_t i = 1;
+   //right here, create a check function have it return something, see if file exists :D
    while (i < words.size()){
-      state.get_cwd()->get_contents()->\
-      get_file_inode(state, words[i])->get_contents()->readfile();
+      state.get_cwd()->get_contents()->get_file_inode(state, words[i])->get_contents()->readfile();
       i++;
    }
    cout << endl;
@@ -62,6 +62,7 @@ void fn_cat (inode_state& state, const wordvec& words) {
 void fn_pound (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   //makes hastags count as comments.
 }
 
 void fn_cd (inode_state& state, const wordvec& words) {
@@ -265,9 +266,10 @@ void fn_make (inode_state& state, const wordvec& words) {
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 2);
 
-   // Use writefile to write into the file state->contents
+   // Use writefile to write into the file
    state.get_cwd()->get_contents()->\
    get_file_inode(state, words[1])->get_contents()->writefile(newdata);
+   
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words) {

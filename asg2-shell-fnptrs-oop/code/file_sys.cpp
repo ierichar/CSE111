@@ -221,12 +221,22 @@ bool base_file::isDirectory(void) {
 size_t plain_file::size() const {
    size_t size {0};
    DEBUGF ('i', "size = " << size);
+   size_t f = 0;
+   wordvec tempvec = this->data;
+   while (f < tempvec.size()){ //goes to each word
+      size = size + tempvec[f].size();
+      size ++; //add one for space
+      f++;
+   }
+   size --; //subtract an extra one.
+   //cout << size;
    return size;
 }
 
 const wordvec& plain_file::readfile() const {
    DEBUGF ('i', data);
    cout << this->data;
+   //this->size();
    cout << " ";
    return data;
 }
@@ -243,6 +253,7 @@ bool plain_file::isDirectory(void) {
 size_t directory::size() const {
    size_t size {0};
    DEBUGF ('i', "size = " << size);
+   size = this->dirents.size();
    return size;
 }
 
@@ -387,7 +398,6 @@ inode_ptr directory::get_file_inode (const inode_state& state,
    const string& filename) {
    DEBUGF ('i', filename);
    try {
-      //cout << "get_file_inode(): passing " << filename << endl;
       if (dirents.find(filename) == dirents.end()) {
          throw base_file_error();
       }
