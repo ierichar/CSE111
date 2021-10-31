@@ -118,7 +118,7 @@ class base_file {
       virtual inode_ptr mkdir (inode_state& state, const string& dirname);
       virtual inode_ptr mkfile (inode_state& state, const string& filename);
       virtual inode_ptr get_directory_inode (const string& dirname);
-      virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
+      virtual inode_ptr get_file_inode (const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void);
       virtual void print_directory_ls(void);
       virtual void print_directory_lsr(inode_state& state);
@@ -180,7 +180,7 @@ class directory: public base_file {
       virtual inode_ptr mkdir (inode_state& state, const string& dirname) override;
       virtual inode_ptr mkfile (inode_state& state, const string& filename) override;
       virtual inode_ptr get_directory_inode (const string& dirname) override;
-      virtual inode_ptr get_file_inode (const inode_state& state, const string& filename);
+      virtual inode_ptr get_file_inode (const string& filename);
       virtual map<string,inode_ptr>& get_dirents (void) override;
       virtual void print_directory_ls(void) override;
       virtual void print_directory_lsr(inode_state& state) override;
