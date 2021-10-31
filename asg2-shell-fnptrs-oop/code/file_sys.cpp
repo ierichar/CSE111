@@ -225,6 +225,7 @@ size_t plain_file::size() const {
 const wordvec& plain_file::readfile() const {
    DEBUGF ('i', data);
    cout << this->data;
+   cout << " ";
    return data;
 }
 
