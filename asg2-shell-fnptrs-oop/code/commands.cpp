@@ -48,11 +48,12 @@ void fn_cat (inode_state& state, const wordvec& words) {
 
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 1);
-   size_t i = 0;
-   while (i < words.size()-1){
+   size_t i = 1;
+   while (i < words.size()){
       state.get_cwd()->get_contents()->get_file_inode(state, words[i])->get_contents()->readfile();
       i++;
    }
+   cout << endl;
 }
 
 void fn_pound (inode_state& state, const wordvec& words) {
@@ -157,7 +158,7 @@ void fn_make (inode_state& state, const wordvec& words) {
 
    // create a newdata wordvec ignoring the first 2 elements
    wordvec newdata = words;
-   newdata.erase(newdata.begin(), newdata.begin() + 1);
+   newdata.erase(newdata.begin(), newdata.begin() + 2);
 
    //use writefile to write into the file state->contents
    
