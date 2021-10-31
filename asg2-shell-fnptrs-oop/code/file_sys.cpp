@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: file_sys.cpp,v 1.10 2021-04-10 14:23:40-07 - - $
 
 #include <cassert>
@@ -42,14 +44,13 @@ inode_state::inode_state() {
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 
-   inode_ptr virtual_inode_ptr = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   inode_ptr virtual_inode_ptr = 
+      make_shared<inode>(file_type::DIRECTORY_TYPE);
    virtual_inode_ptr->contents = make_shared<directory>();
-   inode_ptr root_inode_ptr = virtual_inode_ptr->contents->mkdir(*this, "/");
+   inode_ptr root_inode_ptr = 
+      virtual_inode_ptr->contents->mkdir(*this, "/");
 
-   // Insert inode directory
-   // root_inode_ptr->inode_nr = root_inode_ptr->next_inode_nr;
-   // root_inode_ptr->next_inode_nr;
-   // Initialize inode_state
+   // Attach inode directory
    this->root = root_inode_ptr; // ..
    this->cwd = root_inode_ptr;  // .
    this->prompt_ = prompt();
@@ -195,7 +196,8 @@ inode_ptr base_file::get_directory_inode (const string&) {
 }
 
 
-inode_ptr base_file::get_file_inode (const inode_state&, const string&) {
+inode_ptr base_file::get_file_inode (const inode_state&, 
+   const string&) {
    throw file_error ("is a " + error_file_type());
 }
 
@@ -230,18 +232,11 @@ const wordvec& plain_file::readfile() const {
 }
 
 void plain_file::writefile (const wordvec& words) {
-    DEBUGF ('i', words);
-
-   //inode_ptr new_inode_ptr = state.get_cwd()->get_contents()->get_file_inode(state, words[0]);
-   //wordvec newdata = words;
-   //newdata.erase(newdata.begin(), newdata.begin() + 1);
-   //new_inode_ptr->get_contents()->this.data = newdata;
+   DEBUGF ('i', words);
    this->data = words;
-   //get dirents[filename]
 }
 
 bool plain_file::isDirectory(void) {
-   // :(
    return false;
 }
 
@@ -255,7 +250,8 @@ void directory::remove (const string& filename) {
    DEBUGF ('i', filename);
 }
 
-inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
+inode_ptr directory::mkdir (inode_state& state, 
+   const string& dirname) {
    DEBUGF ('i', dirname);
    try {
       if (dirname == "." || dirname == "..") {
@@ -265,15 +261,19 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
       if (dirents.find(dirname) == dirents.end() && dirname == "/") {
 
          // IMPORTANT SYNTAX 10-28-2021
-         inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+         inode_ptr new_inode_ptr 
+            { make_shared<inode>(file_type::DIRECTORY_TYPE) };
 
          // Insert root directory, "." and ".."
-         cout << "mkdir(): " << dirname << " inserting at " << new_inode_ptr << endl;
-         dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
-         cout << "mkdir(): . inserting at " << new_inode_ptr << endl;
-         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>(".", new_inode_ptr) );
-         cout << "mkdir(): .. inserting at " << new_inode_ptr << endl;
-         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", new_inode_ptr) );
+         dirents.insert( 
+            pair<string,inode_ptr>(dirname, new_inode_ptr) 
+         );
+         new_inode_ptr->get_contents()->get_dirents().insert(
+            pair<string,inode_ptr>(".", new_inode_ptr) 
+         );
+         new_inode_ptr->get_contents()->get_dirents().insert( 
+            pair<string,inode_ptr>("..", new_inode_ptr) 
+         );
 
          return new_inode_ptr;
       } 
@@ -283,20 +283,19 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
       else {
          // Create new inode of directory type
 
-         // file_type directory_type {1};
-         // inode* new_inode = new inode(directory_type);
-         // inode_ptr new_inode_ptr (new_inode);
-         // new_inode_ptr->contents = make_shared<directory>();
-
-         inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+         inode_ptr new_inode_ptr 
+            { make_shared<inode>(file_type::DIRECTORY_TYPE) };
 
          // Insert inode directory to send to fn_mkdir
-         cout << "mkdir(): " << dirname << " inserting at " << new_inode_ptr << endl;
-         dirents.insert( pair<string,inode_ptr>(dirname, new_inode_ptr) );
-         cout << "mkdir(): . inserting at " << new_inode_ptr << endl;
-         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>(".", new_inode_ptr) );
-         cout << "mkdir(): .. inserting at " << state.get_cwd() << endl;
-         new_inode_ptr->get_contents()->get_dirents().insert( pair<string,inode_ptr>("..", state.get_cwd()) );
+         dirents.insert( 
+            pair<string,inode_ptr>(dirname, new_inode_ptr)
+         );
+         new_inode_ptr->get_contents()->get_dirents().insert(
+            pair<string,inode_ptr>(".", new_inode_ptr)
+         );
+         new_inode_ptr->get_contents()->get_dirents().insert( 
+            pair<string,inode_ptr>("..", state.get_cwd()) 
+         );
 
          return new_inode_ptr;
       }
@@ -308,23 +307,24 @@ inode_ptr directory::mkdir (inode_state& state, const string& dirname) {
    }
 }
 
-inode_ptr directory::mkfile (inode_state& state, const string& filename) {
+inode_ptr directory::mkfile (inode_state& state, 
+   const string& filename) {
    DEBUGF ('i', filename);
-   //cout << "mkfile() current filename is " << filename << endl;
-   //create an inode with plain_type, for files
+   // Create an inode with plain_type, for files
 
-         //does file name already exist?
+         // Does file name already exist?
          if(dirents.find(filename) != dirents.end()){
             inode_ptr existing_inode = get_file_inode(state, filename);
             return existing_inode;
          }
          else{
-            //create new file
-            //slap it onto dirents then
-            
-            inode_ptr new_inode { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+            // Create new file
+            // Slap it onto dirents then
+            inode_ptr new_inode 
+               { make_shared<inode>(file_type::DIRECTORY_TYPE) };
             new_inode->contents = make_shared<plain_file>();
-            dirents.insert( pair<string, inode_ptr> (filename, new_inode) );
+            dirents.insert( 
+               pair<string, inode_ptr> (filename, new_inode) );
             return new_inode;
          }
 }
@@ -332,8 +332,8 @@ inode_ptr directory::mkfile (inode_state& state, const string& filename) {
 inode_ptr directory::get_directory_inode (const string& dirname) {
    DEBUGF ('i', dirname);
    try {
-      cout << "get_directory_inode(): passing " << dirname << endl;
-      if (dirents.find(dirname) == dirents.end() && dirents.find(dirname + "/") == dirents.end()) {
+      if (dirents.find(dirname) == dirents.end() && 
+         dirents.find(dirname + "/") == dirents.end()) {
          throw base_file_error();
       }
       return dirents[dirname];
@@ -344,7 +344,8 @@ inode_ptr directory::get_directory_inode (const string& dirname) {
    }
 }
 
-inode_ptr directory::get_file_inode (const inode_state& state, const string& filename) {
+inode_ptr directory::get_file_inode (const inode_state& state, 
+   const string& filename) {
    DEBUGF ('i', filename);
    try {
       //cout << "get_file_inode(): passing " << filename << endl;
@@ -375,17 +376,17 @@ void directory::print_directory_ls(void) {
 }
 
 void directory::print_directory_lsr(void) {
-   // pre-order print directory tree nodes
+   // Pre-order print directory tree nodes
    this->print_directory_ls();
 
-   // create testcase of type make_shared<directory> to compare contents
-   // of arbitrary inode_ptrs in the directory map
+   // Create testcase of type make_shared<directory> 
+   // to compare contents of arbitrary inode_ptrs in the directory map
    base_file_ptr testcase = make_shared<directory>();
 
    for (auto i = dirents.begin(); i != dirents.end(); ++i) {
       if (i->second->get_contents()->isDirectory() 
             && i->first != "." && i->first != "..") {
-         // recursively access subdirectories and print them out
+         // Recursively access subdirectories and print them out
          // in pre-order
          cout << i->first;
          if (i->first != "/") {
@@ -398,6 +399,5 @@ void directory::print_directory_lsr(void) {
 }
 
 bool directory::isDirectory(void) {
-   // :)
    return true;
 }

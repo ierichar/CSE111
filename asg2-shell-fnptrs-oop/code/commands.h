@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: commands.h,v 1.11 2016-01-14 14:45:21-08 - - $
 
 #ifndef __COMMANDS_H__

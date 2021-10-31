@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: file_sys.h,v 1.9 2021-09-26 12:41:17-07 - - $
 
 #ifndef __INODE_H__

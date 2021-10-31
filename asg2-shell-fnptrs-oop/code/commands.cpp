@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: commands.cpp,v 1.21 2021-09-26 12:41:17-07 - - $
 
 #include "commands.h"
@@ -50,7 +52,8 @@ void fn_cat (inode_state& state, const wordvec& words) {
    newdata.erase(newdata.begin(), newdata.begin() + 1);
    size_t i = 1;
    while (i < words.size()){
-      state.get_cwd()->get_contents()->get_file_inode(state, words[i])->get_contents()->readfile();
+      state.get_cwd()->get_contents()->\
+      get_file_inode(state, words[i])->get_contents()->readfile();
       i++;
    }
    cout << endl;
@@ -64,38 +67,53 @@ void fn_pound (inode_state& state, const wordvec& words) {
 void fn_cd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   // Change state according to words[1] (which is a directory or . or ..)
-   // words[1] to directory to retrieve inode_ptr
-   // . and .. are interpreted by fn_cd
-   if (words[1] == "/") {
+   // Case 1: cd
+   if (words.size() == 1) {
       state.go_to_root();
       state.set_cwd(state.get_root());
       cout << state.pathname_to_string() << endl;
-   } else if (words[1] == ".") {
+   }
+   // Case 2: cd / 
+   else if (words[1] == "/") {
+      state.go_to_root();
+      state.set_cwd(state.get_root());
       cout << state.pathname_to_string() << endl;
-   } else if (words[1] == "..") {
+   } 
+   // Case 3: cd .
+   else if (words[1] == ".") {
+      cout << state.pathname_to_string() << endl;
+   }
+   // Case 4: cd .. 
+   else if (words[1] == "..") {
       // need to also include a map search for parent directory
       if (state.get_cwd() != state.get_root()) {
          state.pop_filepath();
       }
-      state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(".."));
+      state.set_cwd(state.get_cwd()->get_contents()->\
+      get_directory_inode(".."));
       cout << state.pathname_to_string() << endl;
-   } else {
-      // cd [filepath]
+   }
+   // Case 5: cd [filepath]
+   else {
+      // Save cwd
       inode_ptr placeholder = state.get_cwd();
 
+      // Initialize search variables
       wordvec full_filepath = split(words[1], "/");
       cout << "cd full_filepath is " << full_filepath << endl;
       string directory_name;
       bool found = true;
-      for (auto i = full_filepath.begin(); i != full_filepath.end() && found; ++i) {
+      for (auto i = full_filepath.begin(); 
+           i != full_filepath.end() && found; ++i) {
          directory_name = *i;
          cout << "cd search: " << directory_name << endl;
          cout << "cwd is: " << state.get_cwd() << endl;
-         if (state.get_cwd()->get_contents()->get_directory_inode(directory_name) == nullptr) {
+         if (state.get_cwd()->get_contents()->\
+            get_directory_inode(directory_name) == nullptr) {
             found = false;
          } else {
-            state.set_cwd(state.get_cwd()->get_contents()->get_directory_inode(directory_name));
+            state.set_cwd(state.get_cwd()->get_contents()->\
+            get_directory_inode(directory_name));
             state.add_filepath(directory_name);
          }
       }
@@ -125,6 +143,7 @@ void fn_ls (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
    try {
+      // Case 1: ls
       if (words.size() == 1) {
          cout << state.pathname_to_string();
          if (state.get_cwd() != state.get_root()) {
@@ -132,34 +151,41 @@ void fn_ls (inode_state& state, const wordvec& words) {
          }
          cout << ":" << endl;
          state.get_cwd()->get_contents()->print_directory_ls();
-      } else {
-         inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
-         if (placeholder == nullptr) {
-            throw runtime_error(words[1]);
-         }
-         cout << words[1];
-         if (placeholder != state.get_root()) {
-            cout << "/";
-         }
-         cout << ":" << endl;
-         placeholder->get_contents()->print_directory_ls();
       }
-   } catch (runtime_error& error) {
-      cout << "ls error: " << error.what() << " path not valid" << endl;
-   }
-}
+      // Case 2: ls [filepath]
+      else {
+          // Initialize search variables
+         inode_ptr placeholder = state.get_cwd();
+         wordvec full_filepath = split(words[1], "/");
+         string directory_name;
+         bool found = true;
 
-void fn_lsr (inode_state& state, const wordvec& words) {
-   DEBUGF ('c', state);
-   DEBUGF ('c', words);
-   try {
-      if (words.size() == 1) {
-         state.get_cwd()->get_contents()->print_directory_lsr();
-      } else {
-         inode_ptr placeholder = state.get_cwd()->get_contents()->get_directory_inode(words[1]);
+         // Loop through subdirectories to find beginning for lsr
+         for (auto i = full_filepath.begin();
+            i != full_filepath.end() && found; ++i) {
+
+            directory_name = *i;
+            cout << "lsr search: " << directory_name << endl;
+            cout << "cwd is: " << state.get_cwd() << endl;
+            if (placeholder->get_contents()->\
+                  get_directory_inode(directory_name) == nullptr) {
+               found = false;
+            } else {
+               placeholder = placeholder->get_contents()->\
+                  get_directory_inode(directory_name);
+            }
+         }
+         
+         // If issues, throw errors
+         if (!found) {
+            throw runtime_error(directory_name);
+         }
          if (placeholder == nullptr) {
             throw runtime_error(words[1]);
          }
+
+         // Print first directory with proper format, 
+         // then call recursive print lsr
          cout << words[1];
          if (placeholder != state.get_root()) {
             cout << "/";
@@ -168,7 +194,63 @@ void fn_lsr (inode_state& state, const wordvec& words) {
          placeholder->get_contents()->print_directory_lsr();
       }
    } catch (runtime_error& error) {
-      cout << "lsr error: " << error.what() << " path not valid" << endl;
+      cout << "ls error: " << error.what();
+      cout << " path not valid" << endl;
+   }
+}
+
+void fn_lsr (inode_state& state, const wordvec& words) {
+   DEBUGF ('c', state);
+   DEBUGF ('c', words);
+   try {
+      // Case 1: lsr 
+      if (words.size() == 1) {
+         state.get_cwd()->get_contents()->print_directory_lsr();
+      } 
+      // Case 2: lsr [filepath]
+      else {
+         // Initialize search variables
+         inode_ptr placeholder = state.get_cwd();
+         wordvec full_filepath = split(words[1], "/");
+         string directory_name;
+         bool found = true;
+
+         // Loop through subdirectories to find beginning for lsr
+         for (auto i = full_filepath.begin();
+            i != full_filepath.end() && found; ++i) {
+
+            directory_name = *i;
+            cout << "lsr search: " << directory_name << endl;
+            cout << "cwd is: " << state.get_cwd() << endl;
+            if (placeholder->get_contents()->\
+                  get_directory_inode(directory_name) == nullptr) {
+               found = false;
+            } else {
+               placeholder = placeholder->get_contents()->\
+                  get_directory_inode(directory_name);
+            }
+         }
+         
+         // If issues, throw errors
+         if (!found) {
+            throw runtime_error(directory_name);
+         }
+         if (placeholder == nullptr) {
+            throw runtime_error(words[1]);
+         }
+
+         // Print first directory with proper format, 
+         // then call recursive print lsr
+         cout << words[1];
+         if (placeholder != state.get_root()) {
+            cout << "/";
+         }
+         cout << ":" << endl;
+         placeholder->get_contents()->print_directory_lsr();
+      }
+   } catch (runtime_error& error) {
+      cout << "lsr error: " << error.what();
+      cout << " path not valid" << endl;
    }
 }
 
@@ -176,37 +258,34 @@ void fn_make (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
    
+   // Calls mkfile with state pathname
    state.get_cwd()->get_contents()->mkfile(state, words[1]); 
-   //calls mkfile with state pathname
 
-   // create a newdata wordvec ignoring the first 2 elements
+   // Create a newdata wordvec ignoring the first 2 elements
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 2);
 
-   //use writefile to write into the file state->contents
-   
-   state.get_cwd()->get_contents()->get_file_inode(state, words[1])->get_contents()->writefile(newdata);
+   // Use writefile to write into the file state->contents
+   state.get_cwd()->get_contents()->\
+   get_file_inode(state, words[1])->get_contents()->writefile(newdata);
 }
 
 void fn_mkdir (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-   // inode_state& state is changed by:
-   //     wordvec& words-> directory()-> inode_ptr directory::mkdir()
-   // inode_ptr is added to inode_state&
-   // we need to know:
-   //    size_t curr_size = state.get_inode_nr();
-   //    inode
 
-   inode_ptr new_inode_ptr { make_shared<inode>(file_type::DIRECTORY_TYPE) };
-   new_inode_ptr = state.get_cwd()->get_contents()->mkdir(state, words[1]);
+   // Create new inode and ptr
+   inode_ptr new_inode_ptr \
+   { make_shared<inode>(file_type::DIRECTORY_TYPE) };
+
+   new_inode_ptr = 
+      state.get_cwd()->get_contents()->mkdir(state, words[1]);
    
    // Insert new_inode_ptr to current directory's map
    size_t new_nr = state.get_cwd()->get_next_inode() + 1;
    new_inode_ptr->set_inode_nr(state.get_cwd()->get_next_inode());
    new_inode_ptr->set_next_inode_nr(new_nr);
-   // state.set_cwd(new_inode_ptr);
-   // state.add_filepath(words[1]);
+
    cout << state << endl;
 }
 
@@ -214,6 +293,7 @@ void fn_prompt (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
 
+   // Set prompt from given input from words
    wordvec newdata = words;
    newdata.erase(newdata.begin(), newdata.begin() + 1);
    string newPrompt = "";
@@ -230,15 +310,26 @@ void fn_prompt (inode_state& state, const wordvec& words) {
 void fn_pwd (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   // Print working directory
    cout << state.pathname_to_string() << endl;
 }
 
 void fn_rm (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   // 1. Check if searched base file exists
+   // 2. Check if directory
+   //    True: Check if  is empty (only contains . and ..)
+   //       True: Delete directory
+   //    False: Delete file
 }
 
 void fn_rmr (inode_state& state, const wordvec& words) {
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+   // 1. Check if searched base file exists
+   // 2. Check if directory
+   //    True: Check if  is empty (only contains . and ..)
+   //       True: Delete directory
+   //    False: Delete file
 }
