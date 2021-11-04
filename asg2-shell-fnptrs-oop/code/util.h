@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: util.h,v 1.15 2021-09-26 12:41:17-07 - - $
 
 // util -

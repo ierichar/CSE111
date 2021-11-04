@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: main.cpp,v 1.12 2021-09-26 12:41:17-07 - - $
 
 #include <cstdlib>
