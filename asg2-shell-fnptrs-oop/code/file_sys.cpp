@@ -55,11 +55,6 @@ inode_state::inode_state() {
    this->cwd = root_inode_ptr;  // .
    this->prompt_ = prompt();
    this->pathname.push_back("/");
-
-   cout << "root is: " << this->root << endl;
-   cout << "root contents is :" << this->root->contents << endl;
-   cout << "next_inode_nr " << this->root->next_inode_nr << endl;
-   cout << "inode_nr: " << this->root->inode_nr << endl;
 }
 
 const string& inode_state::prompt() const { return prompt_; }
@@ -232,7 +227,6 @@ size_t plain_file::size() const {
    if (size > 0) {
       size --; //subtract an extra one.
    }
-   //cout << size;
    return size;
 }
 
@@ -276,10 +270,8 @@ void directory::remove (const string& filename) {
       }
       // If directory remove directory
       else if (dirents[filename]->get_contents()->isDirectory()) {
-         cout << "check 1 reached" << endl;
          // Check if only . and .. are in directory
          if (dirents[filename]->get_contents()->size() == 2) {
-            cout << "size check reached" << endl;
             // Call remove on .
             dirents[filename]->get_contents()->remove(".");
             // Call remove on ..
