@@ -37,12 +37,15 @@ void scan_options (int argc, char** argv) {
    }
 }
 
-void mapfile (istream& infile, const string& filename) {
+void mapfile (istream& infile, const string& filename, str_str_map& map) {
    static string colons (32, ':');
    cout << colons << endl << filename << endl << colons << endl;
    regex comment_regex {R"(^\s*(#.*)?$)"}; //#
    regex trimmed_regex {R"(^\s*([^=]+?)\s*$)"}; // = 
-   regex key_value_regex {R"(^\s*(.*?)\s*=\s*(.*?)\s*$)"}; 
+   regex key_value_regex {R"(^\s*(.*?)\s*=\s*(.*?)\s*$)"};
+
+   str_str_map::iterator itor;     // define main iterator
+
    for(;;) {
       string line;
       getline (infile, line);
@@ -53,30 +56,46 @@ void mapfile (istream& infile, const string& filename) {
       if (regex_search (line, result, comment_regex)) {
          cout << "Comment or empty line." << endl; //if hashtag comment
       }else if (regex_search (line, result, trimmed_regex)) {
-         if (result[1]=="="){
-            cout << "query: \"" << result[1] << "\"" << endl; //if just an equals side note this is useless            
-         }
-         else{
-            cout << "key: \"" << result[1] << "\"" << "just the val baby" << endl; //if just an equals 
-         }
+         // if (result[1]=="="){
+         //    cout << "query: \"" << result[1] << "\"" << endl; //if just an equals side note this is useless            
+         // }
+         // else{
+         cout << "key: \"" << result[1] << "\"" << "just the val baby" << endl; //if just an equals
+         itor = map.find(result[1]);
+         if (itor == map.end()) cout << result[1] << ": not found" << endl;
+         else cout << itor->first << " = " << itor->second << endl;
+         // }
       }else if (regex_search (line, result, key_value_regex)) { 
          cout << "key  : \"" << result[1] << "\"" << endl;
          cout << "value: \"" << result[2] << "\"" << endl; //if key and value
          if ((result[1]=="")&&(result[2]=="")){
             cout << "both are empty"; //and run some code
+            itor = map.begin();
+            for (; itor != map.end(); ++itor)
+               cout << itor->first << " = " << itor->second << endl;
          }
          else if (result[2]==""){
             cout << "value empty"; //and run some code
+            itor = map.find(result[1]);
+            if (itor == map.end()) cout << result[1] << ": not found" << endl;
+            else map.erase(itor);
          }
          else if (result[1]==""){
             cout << "key empty"; //and run some code
+            itor = map.begin();
+            for (; itor != map.end(); ++itor)
+               if (itor->second == result[1])
+                  cout << itor->first << " = " << itor->second << endl;
          } else{
             cout << "both are full"; //and run some code
+            str_str_pair val_pair { result[1], result[2] };
+            map.insert(val_pair);
          }
       }
       else {
          assert (false and "This can not happen.");
       }
+      cin.ignore();
       //you idget, this is where you put the code cout << line << endl;
    }
 }
@@ -87,9 +106,11 @@ int main (int argc, char** argv) {
    int status = 0;
    string progname (basename (argv[0]));
    vector<string> filenames (&argv[1], &argv[argc]);
+   str_str_map lmap;
+
    if (filenames.size() == 0) filenames.push_back (cin_name);
    for (const auto& filename: filenames) {
-      if (filename == cin_name) mapfile (cin, filename);
+      if (filename == cin_name) mapfile (cin, filename, lmap);
       else {
          ifstream infile (filename);
          if (infile.fail()) {
@@ -97,7 +118,7 @@ int main (int argc, char** argv) {
             cerr << progname << ": " << filename << ": "
                  << strerror (errno) << endl;
          }else {
-            mapfile (infile, filename);
+            mapfile (infile, filename, lmap);
             infile.close();
          }
       }
