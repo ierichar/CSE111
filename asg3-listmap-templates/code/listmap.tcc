@@ -82,7 +82,7 @@ listmap<key_t,mapped_t,less_t>::find (const key_type& that) {
    iterator itor = iterator(begin());
    bool found = false;
    for (; itor != end() and not found; ++itor)
-      if (itor.where->first == that.first) found = true;
+      if (itor.where->value.first == that) found = true;
    if (not found) itor = end();
    return itor;
 }
