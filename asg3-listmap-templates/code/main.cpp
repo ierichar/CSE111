@@ -83,9 +83,10 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
          else if (result[1]==""){
             cout << "key empty" << endl; //and run some code
             itor = map.begin();
-            for (; itor != map.end(); ++itor)
-               if (itor->second == result[1])
+            for (; itor != map.end(); ++itor) {
+               if (itor->second == result[2])
                   cout << itor->first << " = " << itor->second << endl;
+            }
          } else{
             cout << "both are full" << endl; //and run some code
             str_str_pair val_pair { result[1], result[2] };

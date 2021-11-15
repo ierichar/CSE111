@@ -42,9 +42,6 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
       pair
    );
    iterator itor = begin();
-   cout << "listmap(): inserting " << pair.first << " = " << pair.second << endl;
-   if (itor.where->next == anchor() && itor.where->prev == anchor())
-      cout << "listmap(): starting iterator has next and prev pointint to anchor" << endl;
    // Insert node between anchors if empty
    if (empty()) {
       new_node->next = anchor();
@@ -75,9 +72,6 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
          itor = new_node;
       }
    }
-   cout << "listmap(): created new node" << endl;
-   if (itor.where->next == anchor() && itor.where->prev == anchor())
-      cout << "listmap(): properly added 1st" << endl;
    // Construct a new node
    return itor;
 }
@@ -91,7 +85,6 @@ listmap<key_t,mapped_t,less_t>::find (const key_type& that) {
    DEBUGF ('l', that);
    iterator itor = begin();
    bool found = false;
-   cout << "find(): input is " << that << endl;
    for (; itor != end(); ++itor) {
       if (itor != end() and itor.where->value.first == that) {
          return itor;
