@@ -75,19 +75,20 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
                cout << itor->first << " = " << itor->second << endl;
          }
          else if (result[2]==""){
-            cout << "value empty"; //and run some code
+            cout << "value empty" << endl; //and run some code
             itor = map.find(result[1]);
             if (itor == map.end()) cout << result[1] << ": not found" << endl;
             else map.erase(itor);
          }
          else if (result[1]==""){
-            cout << "key empty"; //and run some code
+            cout << "key empty" << endl; //and run some code
             itor = map.begin();
-            for (; itor != map.end(); ++itor)
-               if (itor->second == result[1])
+            for (; itor != map.end(); ++itor) {
+               if (itor->second == result[2])
                   cout << itor->first << " = " << itor->second << endl;
+            }
          } else{
-            cout << "both are full"; //and run some code
+            cout << "both are full" << endl; //and run some code
             str_str_pair val_pair { result[1], result[2] };
             map.insert(val_pair);
          }
@@ -95,7 +96,6 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
       else {
          assert (false and "This can not happen.");
       }
-      cin.ignore();
       //you idget, this is where you put the code cout << line << endl;
    }
 }
