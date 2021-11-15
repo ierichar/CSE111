@@ -41,7 +41,9 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
       prev,
       pair
    );
+   cout << "insert(): new node created" << endl;
    iterator itor = begin();
+   bool inserted = false;
    // Insert node between anchors if empty
    if (empty()) {
       new_node->next = anchor();
@@ -49,29 +51,37 @@ listmap<key_t,mapped_t,less_t>::insert (const value_type& pair) {
       itor.where->next = new_node;
       itor.where->prev = new_node;
       itor = new_node;
+      inserted = true;
+      cout << "insert(): map is empty" << endl;
    }
    // Determine where to insert node
    else {
+      cout << "insert(): comparing to other keys" << endl;
       // itor.where
-      for (; itor != end(); ++itor) {
+      for (; itor != anchor() and not inserted; ++itor) {
+         cout << "insert(): checking " << pair.first << " = " << pair.second << endl;
          if (itor != anchor() and less(pair.first, itor.where->value.first)) {
+            cout << "insert(): inserting before" << pair.first << endl;
             // Perform insertion
             new_node->next = itor.where;
             new_node->prev = itor.where->prev;
             itor.where->prev->next = new_node;
             itor.where->prev = new_node;
             itor = new_node;
+            inserted = true;
          }
       }
-      // If the new key is greater than all
-      if (next == nullptr && prev == nullptr) {
-         new_node->next = itor.where->next;
-         new_node->prev = itor.where;
-         itor.where->next->prev = new_node;
-         itor.where->next = new_node;
-         itor = new_node;
-      }
    }
+   // If the new key is greater than all
+   if (not inserted) {
+      cout << "insert(): new node is greater than all" << endl;
+      new_node->next = itor.where->next;
+      new_node->prev = itor.where;
+      itor.where->next->prev = new_node;
+      itor.where->next = new_node;
+      itor = new_node;
+   }
+   cout << "insert(): return iterator" << endl;
    // Construct a new node
    return itor;
 }

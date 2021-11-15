@@ -55,7 +55,7 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
       smatch result;
       if (regex_search (line, result, comment_regex)) {
          cout << "Comment or empty line." << endl; //if hashtag comment
-      }else if (regex_search (line, result, trimmed_regex)) {
+      } else if (regex_search (line, result, trimmed_regex)) {
          // if (result[1]=="="){
          //    cout << "query: \"" << result[1] << "\"" << endl; //if just an equals side note this is useless            
          // }
@@ -65,7 +65,7 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
          if (itor == map.end()) cout << result[1] << ": not found" << endl;
          else cout << itor->first << " = " << itor->second << endl;
          // }
-      }else if (regex_search (line, result, key_value_regex)) { 
+      } else if (regex_search (line, result, key_value_regex)) { 
          cout << "key  : \"" << result[1] << "\"" << endl;
          cout << "value: \"" << result[2] << "\"" << endl; //if key and value
          if ((result[1]=="")&&(result[2]=="")){
@@ -73,21 +73,22 @@ void mapfile (istream& infile, const string& filename, str_str_map& map) {
             itor = map.begin();
             for (; itor != map.end(); ++itor)
                cout << itor->first << " = " << itor->second << endl;
-         }
-         else if (result[2]==""){
+         } 
+         else if (result[2]=="") {
             cout << "value empty" << endl; //and run some code
             itor = map.find(result[1]);
             if (itor == map.end()) cout << result[1] << ": not found" << endl;
             else map.erase(itor);
          }
-         else if (result[1]==""){
+         else if (result[1]=="") {
             cout << "key empty" << endl; //and run some code
             itor = map.begin();
             for (; itor != map.end(); ++itor) {
                if (itor->second == result[2])
                   cout << itor->first << " = " << itor->second << endl;
             }
-         } else{
+         } 
+         else {
             cout << "both are full" << endl; //and run some code
             str_str_pair val_pair { result[1], result[2] };
             map.insert(val_pair);
