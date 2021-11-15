@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: debug.h,v 1.6 2021-10-26 22:04:38-07 - - $
 
 #ifndef __DEBUG_H__
