@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: listmap.h,v 1.29 2021-10-26 22:04:38-07 - - $
 
 #ifndef __LISTMAP_H__

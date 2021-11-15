@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: xless.h,v 1.3 2014-04-24 18:02:55-07 - - $
 
 #ifndef __XLESS_H__

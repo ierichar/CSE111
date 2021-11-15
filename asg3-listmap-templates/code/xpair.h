@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: xpair.h,v 1.6 2021-11-01 17:58:24-07 - - $
 
 #ifndef __XPAIR_H__
