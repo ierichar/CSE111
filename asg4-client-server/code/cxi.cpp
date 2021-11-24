@@ -58,6 +58,26 @@ void cxi_ls (client_socket& server) {
    }
 }
 
+void cxi_get (client_socket& server) {
+   cxi_header header;
+   header.command = cxi_command::LS;
+   DEBUGF ('h', "sending header " << header << endl);
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   DEBUGF ('h', "received header " << header << endl);
+   if (header.command != cxi_command::LSOUT) {
+      outlog << "sent GET, server did not return LSOUT" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      size_t host_nbytes = ntohl (header.nbytes);
+      auto buffer = make_unique<char[]> (host_nbytes + 1);
+      recv_packet (server, buffer.get(), host_nbytes);
+      DEBUGF ('h', "received " << host_nbytes << " bytes");
+      buffer[host_nbytes] = '\0';
+      cout << buffer.get();
+   }
+}
+
 
 void usage() {
    cerr << "Usage: " << outlog.execname() << " host port" << endl;
@@ -106,6 +126,9 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::LS:
                cxi_ls (server);
+               break;
+            case cxi_command::GET:
+               cxi_get (server);
                break;
             default:
                outlog << line << ": invalid command" << endl;

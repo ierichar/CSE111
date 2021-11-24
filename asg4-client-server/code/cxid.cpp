@@ -44,6 +44,33 @@ void reply_ls (accepted_socket& client_sock, cxi_header& header) {
    DEBUGF ('h', "sent " << ls_output.size() << " bytes");
 }
 
+void reply_get (accepted_socket& client_sock, cxi_header& header) {
+   static const char get_cmd[] = "get -l 2>&1";
+   FILE* get_pipe = popen (get_cmd, "r");
+   if (get_pipe == nullptr) { 
+      outlog << get_cmd << ": " << strerror (errno) << endl;
+      header.command = cxi_command::NAK;
+      header.nbytes = htonl (errno);
+      send_packet (client_sock, &header, sizeof header);
+      return;
+   }
+   string get_output;
+   char buffer[0x1000];
+   for (;;) {
+      char* rc = fgets (buffer, sizeof buffer, get_pipe);
+      if (rc == nullptr) break;
+      get_output.append (buffer);
+   }
+   pclose (get_pipe);
+   header.command = cxi_command::LSOUT;
+   header.nbytes = htonl (get_output.size());
+   memset (header.filename, 0, FILENAME_SIZE);
+   DEBUGF ('h', "sending header " << header);
+   send_packet (client_sock, &header, sizeof header);
+   send_packet (client_sock, get_output.c_str(), get_output.size());
+   DEBUGF ('h', "sent " << get_output.size() << " bytes");
+}
+
 
 void run_server (accepted_socket& client_sock) {
    outlog.execname (outlog.execname() + "*");
