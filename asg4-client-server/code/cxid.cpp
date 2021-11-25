@@ -62,7 +62,7 @@ void reply_get (accepted_socket& client_sock, cxi_header& header) {
       get_output.append (buffer);
    }
    pclose (get_pipe);
-   header.command = cxi_command::LSOUT;
+   header.command = cxi_command::FILEOUT;
    header.nbytes = htonl (get_output.size());
    memset (header.filename, 0, FILENAME_SIZE);
    DEBUGF ('h', "sending header " << header);
@@ -83,6 +83,9 @@ void run_server (accepted_socket& client_sock) {
          switch (header.command) {
             case cxi_command::LS: 
                reply_ls (client_sock, header);
+               break;
+            case cxi_command::GET:
+               reply_get (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;

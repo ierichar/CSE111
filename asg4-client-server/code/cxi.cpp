@@ -23,6 +23,7 @@ unordered_map<string,cxi_command> command_map {
    {"exit", cxi_command::EXIT},
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
+   {"get" , cxi_command::GET },
 };
 
 static const char help[] = R"||(
@@ -58,15 +59,18 @@ void cxi_ls (client_socket& server) {
    }
 }
 
-void cxi_get (client_socket& server) {
+void cxi_get (client_socket& server, const string& filename) {
    cxi_header header;
-   header.command = cxi_command::LS;
+   header.command = cxi_command::GET;
+   for (size_t i = 0; i < filename.length(); i++) {
+      header.filename[i] = filename[i];
+   }
    DEBUGF ('h', "sending header " << header << endl);
    send_packet (server, &header, sizeof header);
    recv_packet (server, &header, sizeof header);
    DEBUGF ('h', "received header " << header << endl);
-   if (header.command != cxi_command::LSOUT) {
-      outlog << "sent GET, server did not return LSOUT" << endl;
+   if (header.command != cxi_command::FILEOUT) {
+      outlog << "sent GET, server did not return FILEOUT" << endl;
       outlog << "server returned " << header << endl;
    }else {
       size_t host_nbytes = ntohl (header.nbytes);
@@ -113,8 +117,21 @@ int main (int argc, char** argv) {
          string line;
          getline (cin, line);
          if (cin.eof()) throw cxi_exit();
-         outlog << "command " << line << endl;
-         const auto& itor = command_map.find (line);
+
+         // Seperate line into command and filename (if needed)
+         // Reminiscient of "split" in asg2
+         vector<string> wordvec;
+         size_t end {0};
+         for (;;) {
+            size_t start {line.find_first_not_of (' ', end)};
+            if (start == string::npos) break;
+            end = line.find_first_of (' ', start);
+            wordvec.push_back (line.substr (start, end - start));
+         }
+         // Now using wordvec[0] instead of line to find command
+         outlog << "command " << wordvec[0] << endl;
+         const auto& itor = command_map.find (wordvec[0]);
+
          cxi_command cmd = itor == command_map.end()
                          ? cxi_command::ERROR : itor->second;
          switch (cmd) {
@@ -128,7 +145,8 @@ int main (int argc, char** argv) {
                cxi_ls (server);
                break;
             case cxi_command::GET:
-               cxi_get (server);
+               // Pass the filename as well (if given)
+               cxi_get (server, wordvec[1]);
                break;
             default:
                outlog << line << ": invalid command" << endl;
