@@ -1,6 +1,7 @@
 // $Id: cxi.cpp,v 1.6 2021-11-08 00:01:44-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -24,6 +25,7 @@ unordered_map<string,cxi_command> command_map {
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
    {"get" , cxi_command::GET },
+   {"put" , cxi_command::PUT },
 };
 
 static const char help[] = R"||(
@@ -62,6 +64,7 @@ void cxi_ls (client_socket& server) {
 void cxi_get (client_socket& server, const string& filename) {
    cxi_header header;
    header.command = cxi_command::GET;
+   // assign the filename to header.filename
    for (size_t i = 0; i < filename.length(); i++) {
       header.filename[i] = filename[i];
    }
@@ -70,6 +73,49 @@ void cxi_get (client_socket& server, const string& filename) {
    recv_packet (server, &header, sizeof header);
    DEBUGF ('h', "received header " << header << endl);
    if (header.command != cxi_command::FILEOUT) {
+      outlog << "sent GET, server did not return FILEOUT" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      size_t host_nbytes = ntohl (header.nbytes);
+      auto buffer = make_unique<char[]> (host_nbytes + 1);
+      recv_packet (server, buffer.get(), host_nbytes);
+      DEBUGF ('h', "received " << host_nbytes << " bytes");
+      buffer[host_nbytes] = '\0';
+      cout << buffer.get();
+      // // fwrite
+      // ofstream file (header.filename, ios::binary);
+      // file.write (static_cast<char*>(buffer), host_nbytes);
+      // file.close();
+   }
+}
+
+void cxi_put (client_socket& server, const string& filename) {
+   cxi_header header;
+   header.command = cxi_command::PUT;
+   // assign the filename to header.filename
+   for (size_t i = 0; i < filename.length(); i++) {
+      header.filename[i] = filename[i];
+   }
+   // read from file
+   ifstream file (header.filename, ios::binary);
+   if (!file.is_open()) {
+      outlog << "put " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
+      return;
+   }
+   string put_output;
+   char buffer[0x5000];
+   file.read (buffer, sizeof buffer);
+   put_output.append (buffer);
+   file.close();
+   header.nbytes = htonl (put_output.size());
+
+   memset (header.filename, 0, FILENAME_SIZE);
+   DEBUGF ('h', "sending header " << header << endl);
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   DEBUGF ('h', "received header " << header << endl);
+   if (header.command != cxi_command::ACK) {
       outlog << "sent GET, server did not return FILEOUT" << endl;
       outlog << "server returned " << header << endl;
    }else {
@@ -146,7 +192,12 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::GET:
                // Pass the filename as well (if given)
-               cxi_get (server, wordvec[1]);
+               if (wordvec.size() > 1) cxi_get (server, wordvec[1]);
+               else outlog << line << ": no filename given" << endl;
+               break;
+            case cxi_command::PUT:
+               if (wordvec.size() > 1) cxi_put (server, wordvec[1]);
+               else outlog << line << ": no filename given" << endl;
                break;
             default:
                outlog << line << ": invalid command" << endl;

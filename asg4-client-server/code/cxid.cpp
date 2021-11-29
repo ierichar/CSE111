@@ -1,6 +1,7 @@
 // $Id: cxid.cpp,v 1.10 2021-11-16 16:11:40-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 using namespace std;
@@ -45,30 +46,37 @@ void reply_ls (accepted_socket& client_sock, cxi_header& header) {
 }
 
 void reply_get (accepted_socket& client_sock, cxi_header& header) {
-   static const char get_cmd[] = "get -l 2>&1";
-   FILE* get_pipe = popen (get_cmd, "r");
-   if (get_pipe == nullptr) { 
-      outlog << get_cmd << ": " << strerror (errno) << endl;
+   ifstream file (header.filename, ios::binary);
+   if (!file.is_open()) { 
+      outlog << "get " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
       header.command = cxi_command::NAK;
       header.nbytes = htonl (errno);
       send_packet (client_sock, &header, sizeof header);
       return;
    }
    string get_output;
-   char buffer[0x1000];
-   for (;;) {
-      char* rc = fgets (buffer, sizeof buffer, get_pipe);
-      if (rc == nullptr) break;
-      get_output.append (buffer);
-   }
-   pclose (get_pipe);
+   // reminder, can check current file size on server
+   char buffer[0x5000];
+   file.read (buffer, sizeof buffer);
+   get_output.append (buffer);
+   file.close();
    header.command = cxi_command::FILEOUT;
    header.nbytes = htonl (get_output.size());
+
    memset (header.filename, 0, FILENAME_SIZE);
    DEBUGF ('h', "sending header " << header);
    send_packet (client_sock, &header, sizeof header);
    send_packet (client_sock, get_output.c_str(), get_output.size());
    DEBUGF ('h', "sent " << get_output.size() << " bytes");
+}
+
+void reply_put (accepted_socket& client_sock, cxi_header& header) {
+   ofstream file (header.filename, ios::binary);
+
+   string put_output;
+   char buffer[header.nbytes];
+   file.write (buffer, header.nbytes);
 }
 
 
