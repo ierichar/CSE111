@@ -1,6 +1,7 @@
 // $Id: cxi.cpp,v 1.6 2021-11-08 00:01:44-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -23,6 +24,8 @@ unordered_map<string,cxi_command> command_map {
    {"exit", cxi_command::EXIT},
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
+   {"get" , cxi_command::GET }, 
+   {"put" , cxi_command::PUT },
 };
 
 static const char help[] = R"||(
@@ -55,6 +58,66 @@ void cxi_ls (client_socket& server) {
       DEBUGF ('h', "received " << host_nbytes << " bytes");
       buffer[host_nbytes] = '\0';
       cout << buffer.get();
+   }
+}
+
+void cxi_get (client_socket& server, const string& filename) {
+   cxi_header header;
+   header.command = cxi_command::GET;
+   // assign the filename to header.filename
+   for (size_t i = 0; i < filename.length(); i++) {
+      header.filename[i] = filename[i];
+   }
+   DEBUGF ('h', "sending header " << header << endl);
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   DEBUGF ('h', "received header " << header << endl);
+   if (header.command != cxi_command::FILEOUT) {
+      outlog << "sent GET, server did not return FILEOUT" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      size_t host_nbytes = ntohl (header.nbytes);
+      auto buffer = make_unique<char[]> (host_nbytes + 1);
+      recv_packet (server, buffer.get(), host_nbytes);
+      DEBUGF ('h', "received " << host_nbytes << " bytes");
+      buffer[host_nbytes] = '\0';
+      cout << buffer.get();
+   }
+}
+
+void cxi_put (client_socket& server, const string& filename) {
+   cxi_header header;
+   header.command = cxi_command::PUT;
+   // assign the filename to header.filename
+   for (size_t i = 0; i < filename.length(); i++) {
+      header.filename[i] = filename[i];
+   }
+   // read from file
+   ifstream file (header.filename, ios::binary);
+   if (!file.is_open()) {
+      outlog << "put " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
+      return;
+   }
+   string put_output;
+   char buffer[0x5000];
+   file.read (buffer, sizeof buffer);
+   put_output.append (buffer);
+   file.close();
+   header.nbytes = htonl (put_output.size());
+
+   memset (header.filename, 0, FILENAME_SIZE);
+   DEBUGF ('h', "sending header " << header << endl);
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   DEBUGF ('h', "received header " << header << endl);
+   if (header.command != cxi_command::ACK) {
+      outlog << "sent GET, server did not return FILEOUT" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      recv_packet (server, buffer.get(), host_nbytes);
+      DEBUGF ('h', "received " << host_nbytes << " bytes");
+      cout << "request successfully completed" << endl;
    }
 }
 
@@ -93,8 +156,21 @@ int main (int argc, char** argv) {
          string line;
          getline (cin, line);
          if (cin.eof()) throw cxi_exit();
-         outlog << "command " << line << endl;
-         const auto& itor = command_map.find (line);
+
+         // Seperate line into command and filename (if needed)
+         // Reminiscient of "split" in asg2
+         vector<string> wordvec;
+         size_t end {0};
+         for (;;) {
+            size_t start {line.find_first_not_of (' ', end)};
+            if (start == string::npos) break;
+            end = line.find_first_of (' ', start);
+            wordvec.push_back (line.substr (start, end - start));
+         }
+         // Now using wordvec[0] instead of line to find command
+         outlog << "command " << wordvec[0] << endl;
+         const auto& itor = command_map.find (wordvec[0]);
+
          cxi_command cmd = itor == command_map.end()
                          ? cxi_command::ERROR : itor->second;
          switch (cmd) {
@@ -106,6 +182,15 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::LS:
                cxi_ls (server);
+               break;
+            case cxi_command::GET:
+               // Pass the filename as well (if given)
+               if (wordvec.size() > 1) cxi_get (server, wordvec[1]);
+               else outlog << line << ": no filename given" << endl;
+               break;
+            case cxi_command::PUT:
+               if (wordvec.size() > 1) cxi_put (server, wordvec[1]);
+               else outlog << line << ": no filename given" << endl;
                break;
             default:
                outlog << line << ": invalid command" << endl;
