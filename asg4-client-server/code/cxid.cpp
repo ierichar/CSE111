@@ -77,6 +77,15 @@ void reply_put (accepted_socket& client_sock, cxi_header& header) {
    string put_output;
    char buffer[header.nbytes];
    file.write (buffer, header.nbytes);
+   
+   memset (header.filename, 0, FILENAME_SIZE);
+   header.command = cxi_command::ACK;  
+   header.nbytes = htonl (0);
+
+   DEBUGF ('h', "sending header " << header);
+   send_packet (client_sock, &header, sizeof header);
+   send_packet (client_sock, get_output.c_str(), get_output.size());
+   DEBUGF ('h', "sent " << get_output.size() << " bytes");
 }
 
 
@@ -94,6 +103,9 @@ void run_server (accepted_socket& client_sock) {
                break;
             case cxi_command::GET:
                reply_get (client_sock, header);
+               break;
+            case cxi_command::PUT: 
+               cxi_command (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;
