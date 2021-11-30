@@ -24,7 +24,7 @@ unordered_map<string,cxi_command> command_map {
    {"exit", cxi_command::EXIT},
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
-   {"get" , cxi_command::GET },
+   {"get" , cxi_command::GET }, 
    {"put" , cxi_command::PUT },
 };
 
@@ -82,10 +82,6 @@ void cxi_get (client_socket& server, const string& filename) {
       DEBUGF ('h', "received " << host_nbytes << " bytes");
       buffer[host_nbytes] = '\0';
       cout << buffer.get();
-      // // fwrite
-      // ofstream file (header.filename, ios::binary);
-      // file.write (static_cast<char*>(buffer), host_nbytes);
-      // file.close();
    }
 }
 
@@ -119,12 +115,9 @@ void cxi_put (client_socket& server, const string& filename) {
       outlog << "sent GET, server did not return FILEOUT" << endl;
       outlog << "server returned " << header << endl;
    }else {
-      size_t host_nbytes = ntohl (header.nbytes);
-      auto buffer = make_unique<char[]> (host_nbytes + 1);
       recv_packet (server, buffer.get(), host_nbytes);
       DEBUGF ('h', "received " << host_nbytes << " bytes");
-      buffer[host_nbytes] = '\0';
-      cout << buffer.get();
+      cout << "request successfully completed" << endl;
    }
 }
 
