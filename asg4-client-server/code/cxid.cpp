@@ -1,6 +1,7 @@
 // $Id: cxid.cpp,v 1.10 2021-11-16 16:11:40-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 using namespace std;
@@ -44,6 +45,40 @@ void reply_ls (accepted_socket& client_sock, cxi_header& header) {
    DEBUGF ('h', "sent " << ls_output.size() << " bytes");
 }
 
+void reply_get (accepted_socket& client_sock, cxi_header& header) {
+   ifstream file (header.filename, ios::binary);
+   if (!file.is_open()) { 
+      outlog << "get " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
+      header.command = cxi_command::NAK;
+      header.nbytes = htonl (errno);
+      send_packet (client_sock, &header, sizeof header);
+      return;
+   }
+   string get_output;
+   // reminder, can check current file size on server
+   char buffer[0x5000];
+   file.read (buffer, sizeof buffer);
+   get_output.append (buffer);
+   file.close();
+   header.command = cxi_command::FILEOUT;
+   header.nbytes = htonl (get_output.size());
+
+   memset (header.filename, 0, FILENAME_SIZE);
+   DEBUGF ('h', "sending header " << header);
+   send_packet (client_sock, &header, sizeof header);
+   send_packet (client_sock, get_output.c_str(), get_output.size());
+   DEBUGF ('h', "sent " << get_output.size() << " bytes");
+}
+
+void reply_put (accepted_socket& client_sock, cxi_header& header) {
+   ofstream file (header.filename, ios::binary);
+
+   string put_output;
+   char buffer[header.nbytes];
+   file.write (buffer, header.nbytes);
+}
+
 
 void run_server (accepted_socket& client_sock) {
    outlog.execname (outlog.execname() + "*");
@@ -56,6 +91,9 @@ void run_server (accepted_socket& client_sock) {
          switch (header.command) {
             case cxi_command::LS: 
                reply_ls (client_sock, header);
+               break;
+            case cxi_command::GET:
+               reply_get (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;
