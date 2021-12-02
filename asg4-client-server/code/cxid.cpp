@@ -77,14 +77,19 @@ void reply_put (accepted_socket& client_sock, cxi_header& header) {
    string put_output;
    char buffer[header.nbytes];
    file.write (buffer, header.nbytes);
-   
+   //if successful do this
    memset (header.filename, 0, FILENAME_SIZE);
    header.command = cxi_command::ACK;  
    header.nbytes = htonl (0);
-
+//else set error number based on ostream of file
+//use errno to determine which error
    DEBUGF ('h', "sending header " << header);
    send_packet (client_sock, &header, sizeof header);
-   send_packet (client_sock, get_output.c_str(), get_output.size());
+   //get it to send back a ping that file was put properly
+   //set the header according to pdf
+   //set N bytes to 0 to indictate no error
+   //set header to same filename
+   //set command to acknowldege
    DEBUGF ('h', "sent " << get_output.size() << " bytes");
 }
 

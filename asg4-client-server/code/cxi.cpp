@@ -115,6 +115,8 @@ void cxi_put (client_socket& server, const string& filename) {
       outlog << "sent GET, server did not return FILEOUT" << endl;
       outlog << "server returned " << header << endl;
    }else {
+      size_t host_nbytes = ntohl (header.nbytes);
+      auto buffer = make_unique<char[]> (host_nbytes + 1);
       recv_packet (server, buffer.get(), host_nbytes);
       DEBUGF ('h', "received " << host_nbytes << " bytes");
       cout << "request successfully completed" << endl;
@@ -204,4 +206,3 @@ int main (int argc, char** argv) {
    }
    return 0;
 }
-
