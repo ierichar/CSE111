@@ -1,3 +1,5 @@
+# Ian Richardson, ierichar
+# Jackson Brazeal, jbrazeal
 # $Id: Makefile,v 1.22 2021-11-08 00:01:44-08 - - $
 
 MKFILE      = Makefile

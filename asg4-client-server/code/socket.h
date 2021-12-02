@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: socket.h,v 1.4 2021-11-16 13:28:07-08 - - $
 
 #ifndef __SOCKET_H__

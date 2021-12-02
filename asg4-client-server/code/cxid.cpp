@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: cxid.cpp,v 1.10 2021-11-16 16:11:40-08 - - $
 
 #include <iostream>
@@ -56,7 +58,6 @@ void reply_get (accepted_socket& client_sock, cxi_header& header) {
       return;
    }
    string get_output;
-   // reminder, can check current file size on server
    char buffer[0x5000];
    file.read (buffer, sizeof buffer);
    get_output.append (buffer);
@@ -79,6 +80,7 @@ void reply_put (accepted_socket& client_sock, cxi_header& header) {
       header.command = cxi_command::NAK;
       header.nbytes = htonl (errno);
       send_packet (client_sock, &header, sizeof header);
+      return;
    }
    ofstream outfile (header.filename, ios::binary);
    string put_output;
@@ -92,8 +94,7 @@ void reply_put (accepted_socket& client_sock, cxi_header& header) {
    cout << "CXID-PUT: SENDING" << endl;
    DEBUGF ('h', "sending header " << header);
    send_packet (client_sock, &header, sizeof header);
-   // send_packet (client_sock, put_output.c_str(), put_output.size());
-   // DEBUGF ('h', "sent " << put_output.size() << " bytes");
+
 }
 
 void reply_rm (accepted_socket& client_sock, cxi_header& header) {
@@ -103,6 +104,7 @@ void reply_rm (accepted_socket& client_sock, cxi_header& header) {
       header.command = cxi_command::NAK;
       header.nbytes = htonl (errno);
       send_packet (client_sock, &header, sizeof header);
+      return;
    }
    header.command = cxi_command::ACK;
    DEBUGF ('h', "sending header " << header);

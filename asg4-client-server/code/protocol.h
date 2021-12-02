@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: protocol.h,v 1.12 2021-05-18 01:32:29-07 - - $
 
 #ifndef __PROTOCOL__H__

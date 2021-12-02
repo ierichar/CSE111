@@ -1,3 +1,5 @@
+// Ian Richardson, ierichar
+// Jackson Brazeal, jbrazeal
 // $Id: cxi.cpp,v 1.6 2021-11-08 00:01:44-08 - - $
 
 #include <iostream>
@@ -92,6 +94,7 @@ void cxi_get (client_socket& server, const string& filename) {
 }
 
 void cxi_put (client_socket& server, const string& filename) {
+   cout << "CXID-PUT: call cxi_put" << endl;
    cxi_header header;
    header.command = cxi_command::PUT;
    // assign the filename to header.filename
