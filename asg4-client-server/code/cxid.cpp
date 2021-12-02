@@ -63,7 +63,6 @@ void reply_get (accepted_socket& client_sock, cxi_header& header) {
    file.close();
    header.command = cxi_command::FILEOUT;
    header.nbytes = htonl (get_output.size());
-
    memset (header.filename, 0, FILENAME_SIZE);
    DEBUGF ('h', "sending header " << header);
    send_packet (client_sock, &header, sizeof header);
@@ -72,20 +71,42 @@ void reply_get (accepted_socket& client_sock, cxi_header& header) {
 }
 
 void reply_put (accepted_socket& client_sock, cxi_header& header) {
-   ofstream file (header.filename, ios::binary);
-
+   cout << "CXID-PUT: RECIEVING" << endl;
+   ifstream infile (header.filename, ios::binary);
+   if (!infile.is_open()) {
+      outlog << "put " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
+      header.command = cxi_command::NAK;
+      header.nbytes = htonl (errno);
+      send_packet (client_sock, &header, sizeof header);
+   }
+   ofstream outfile (header.filename, ios::binary);
    string put_output;
-   char buffer[header.nbytes];
-   file.write (buffer, header.nbytes);
+   char buffer[0x5000];
+   infile.read(buffer, sizeof buffer);
+   outfile.write(buffer, sizeof buffer);
+   outfile.close();
    
+   header.command = cxi_command::ACK;
    memset (header.filename, 0, FILENAME_SIZE);
-   header.command = cxi_command::ACK;  
-   header.nbytes = htonl (0);
-
+   cout << "CXID-PUT: SENDING" << endl;
    DEBUGF ('h', "sending header " << header);
    send_packet (client_sock, &header, sizeof header);
-   send_packet (client_sock, get_output.c_str(), get_output.size());
-   DEBUGF ('h', "sent " << get_output.size() << " bytes");
+   // send_packet (client_sock, put_output.c_str(), put_output.size());
+   // DEBUGF ('h', "sent " << put_output.size() << " bytes");
+}
+
+void reply_rm (accepted_socket& client_sock, cxi_header& header) {
+   if (remove (header.filename) != 0) {
+      outlog << "rm " << header.filename;
+      outlog << ": " << strerror (errno) << endl;
+      header.command = cxi_command::NAK;
+      header.nbytes = htonl (errno);
+      send_packet (client_sock, &header, sizeof header);
+   }
+   header.command = cxi_command::ACK;
+   DEBUGF ('h', "sending header " << header);
+   send_packet (client_sock, &header, sizeof header);
 }
 
 
@@ -105,7 +126,10 @@ void run_server (accepted_socket& client_sock) {
                reply_get (client_sock, header);
                break;
             case cxi_command::PUT: 
-               cxi_command (client_sock, header);
+               reply_put (client_sock, header);
+               break;
+            case cxi_command::RM:
+               reply_rm (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;

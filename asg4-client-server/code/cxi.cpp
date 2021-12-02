@@ -4,12 +4,14 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <cstring>
 #include <unordered_map>
 #include <vector>
 using namespace std;
 
 #include <libgen.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "debug.h"
@@ -26,6 +28,7 @@ unordered_map<string,cxi_command> command_map {
    {"ls"  , cxi_command::LS  },
    {"get" , cxi_command::GET }, 
    {"put" , cxi_command::PUT },
+   {"rm"  , cxi_command::RM  },
 };
 
 static const char help[] = R"||(
@@ -82,6 +85,9 @@ void cxi_get (client_socket& server, const string& filename) {
       DEBUGF ('h', "received " << host_nbytes << " bytes");
       buffer[host_nbytes] = '\0';
       cout << buffer.get();
+      // ofstream outfile (header.filename, ios::binary);
+      // outfile.write (buffer, sizeof buffer);
+      // outfile.close();
    }
 }
 
@@ -92,32 +98,69 @@ void cxi_put (client_socket& server, const string& filename) {
    for (size_t i = 0; i < filename.length(); i++) {
       header.filename[i] = filename[i];
    }
+
+   // get size of file
+   const char* file = header.filename;
+   struct stat stat_buf;
+   int status = stat (file, &stat_buf);
+   if (status != 0) {
+      cerr << "put " << ": " << file << ": ";
+      cerr << strerror (errno) << endl;
+      return;
+   } else {
+      header.nbytes = stat_buf.st_size;
+   }
+
    // read from file
-   ifstream file (header.filename, ios::binary);
-   if (!file.is_open()) {
+   ifstream infile (header.filename, ios::binary);
+   if (!infile.is_open()) {
       outlog << "put " << header.filename;
       outlog << ": " << strerror (errno) << endl;
       return;
    }
+   
    string put_output;
    char buffer[0x5000];
-   file.read (buffer, sizeof buffer);
+   infile.read (buffer, sizeof buffer);
    put_output.append (buffer);
-   file.close();
+   infile.close();
    header.nbytes = htonl (put_output.size());
+   cout << "CXID-PUT: SENDING" << endl;
 
-   memset (header.filename, 0, FILENAME_SIZE);
+   DEBUGF ('h', "sending header " << header << endl);
+   send_packet (server, &header, sizeof header);
+   send_packet (server, put_output.c_str(), put_output.size());
+   // recv_packet (server, &header, sizeof header);
+   DEBUGF ('h', "received header " << header << endl);
+
+   cout << "CXID-PUT: RECIEVING" << endl;
+
+   if (header.command != cxi_command::ACK) {
+      outlog << "sent PUT, server did not return ACK" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      cout << "request successfully completed" << endl;
+   }
+}
+
+void cxi_rm (client_socket& server, const string& filename) {
+   cxi_header header;
+   header.command = cxi_command::RM;
+   // assign the filename to header.filename
+   for (size_t i = 0; i < filename.length(); i++) {
+      header.filename[i] = filename[i];
+   }
+   header.nbytes = htonl (0);
    DEBUGF ('h', "sending header " << header << endl);
    send_packet (server, &header, sizeof header);
    recv_packet (server, &header, sizeof header);
    DEBUGF ('h', "received header " << header << endl);
    if (header.command != cxi_command::ACK) {
-      outlog << "sent GET, server did not return FILEOUT" << endl;
+      outlog << "sent RM, server did not return ACK" << endl;
       outlog << "server returned " << header << endl;
    }else {
-      recv_packet (server, buffer.get(), host_nbytes);
-      DEBUGF ('h', "received " << host_nbytes << " bytes");
-      cout << "request successfully completed" << endl;
+      DEBUGF ('h', "received " << sizeof header << " bytes");
+      cout << header.filename << " successfully removed" << endl;
    }
 }
 
@@ -190,6 +233,10 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::PUT:
                if (wordvec.size() > 1) cxi_put (server, wordvec[1]);
+               else outlog << line << ": no filename given" << endl;
+               break;
+            case cxi_command::RM:
+               if (wordvec.size() > 1) cxi_rm (server, wordvec[1]);
                else outlog << line << ": no filename given" << endl;
                break;
             default:
